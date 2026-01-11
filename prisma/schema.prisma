@@ -1,0 +1,404 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  phone     String?
+  address   String?
+  avatar    String?
+  
+  // Authentication
+  emailVerified DateTime?
+  accounts      Account[]
+  sessions      Session[]
+  
+  // User preferences
+  notifications NotificationSettings?
+  privacy       PrivacySettings?
+  
+  // User activity
+  savedDeals    SavedDeal[]
+  orders        Order[]
+  groupBuys     GroupBuyParticipant[]
+  cashbacks     Cashback[]
+  reviews       Review[]
+  
+  // Gamification
+  level         String   @default("Bronze")
+  totalSavings  Float    @default(0)
+  joinedAt      DateTime @default(now())
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
+
+model Merchant {
+  id          String @id @default(cuid())
+  name        String
+  email       String @unique
+  logo        String?
+  description String?
+  website     String?
+  
+  // Business info
+  businessType    String?
+  taxId           String?
+  address         String?
+  phone           String?
+  
+  // Platform settings
+  commissionRate  Float   @default(8.5)
+  tier           String  @default("Standard") // Standard, Premium, Enterprise
+  verified       Boolean @default(false)
+  
+  // Stats
+  totalRevenue   Float   @default(0)
+  totalCustomers Int     @default(0)
+  avgRating      Float   @default(0)
+  
+  deals     Deal[]
+  orders    Order[]
+  reviews   Review[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("merchants")
+}
+
+model Deal {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  category    String
+  
+  // Pricing
+  originalPrice Float
+  currentPrice  Float
+  discount      Float
+  
+  // Deal type and settings
+  type          DealType
+  status        DealStatus @default(DRAFT)
+  
+  // Group buy specific
+  targetParticipants Int?
+  currentParticipants Int @default(0)
+  minParticipants    Int?
+  
+  // Instant deal specific
+  cashbackAmount     Float?
+  cashbackPercentage Float?
+  
+  // Media and content
+  images      String[]
+  features    String[]
+  terms       String?
+  
+  // Timing
+  startDate   DateTime?
+  endDate     DateTime?
+  duration    Int? // in hours
+  
+  // Merchant relation
+  merchantId  String
+  merchant    Merchant @relation(fields: [merchantId], references: [id])
+  
+  // Relations
+  savedBy         SavedDeal[]
+  orders          Order[]
+  groupBuys       GroupBuyParticipant[]
+  priceHistory    PriceHistory[]
+  reviews         Review[]
+  
+  // Metadata
+  verified    Boolean @default(false)
+  featured    Boolean @default(false)
+  trending    Boolean @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("deals")
+}
+
+model Order {
+  id       String      @id @default(cuid())
+  orderNumber String   @unique
+  
+  // Relations
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  dealId     String
+  deal       Deal     @relation(fields: [dealId], references: [id])
+  merchantId String
+  merchant   Merchant @relation(fields: [merchantId], references: [id])
+  
+  // Order details
+  quantity    Int
+  unitPrice   Float
+  totalPrice  Float
+  discount    Float   @default(0)
+  
+  // Status and tracking
+  status      OrderStatus @default(PENDING)
+  paymentStatus PaymentStatus @default(PENDING)
+  
+  // Shipping
+  shippingAddress String?
+  trackingNumber  String?
+  
+  // Cashback
+  cashbackAmount  Float?
+  cashbackStatus  CashbackStatus @default(PENDING)
+  
+  // Timestamps
+  orderDate    DateTime @default(now())
+  shippedDate  DateTime?
+  deliveredDate DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("orders")
+}
+
+model GroupBuyParticipant {
+  id       String @id @default(cuid())
+  
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
+  dealId   String
+  deal     Deal   @relation(fields: [dealId], references: [id])
+  
+  quantity      Int
+  priceAtJoin   Float
+  currentPrice  Float
+  
+  status        GroupBuyStatus @default(ACTIVE)
+  joinedAt      DateTime @default(now())
+  
+  // Payment
+  paymentIntentId String?
+  charged         Boolean @default(false)
+  refundAmount    Float?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, dealId])
+  @@map("group_buy_participants")
+}
+
+model SavedDeal {
+  id     String @id @default(cuid())
+  
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  dealId String
+  deal   Deal   @relation(fields: [dealId], references: [id])
+  
+  priceAlert Boolean @default(false)
+  savedAt    DateTime @default(now())
+
+  @@unique([userId, dealId])
+  @@map("saved_deals")
+}
+
+model Cashback {
+  id       String @id @default(cuid())
+  
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
+  
+  amount   Float
+  source   String // order_id, referral, bonus, etc.
+  type     CashbackType
+  status   CashbackStatus @default(PENDING)
+  
+  description String?
+  
+  // Processing
+  processedAt DateTime?
+  paidOut     Boolean @default(false)
+  paidOutAt   DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cashbacks")
+}
+
+model Review {
+  id       String @id @default(cuid())
+  
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  dealId     String?
+  deal       Deal?    @relation(fields: [dealId], references: [id])
+  merchantId String?
+  merchant   Merchant? @relation(fields: [merchantId], references: [id])
+  
+  rating     Int // 1-5
+  title      String?
+  content    String
+  verified   Boolean @default(false)
+  helpful    Int     @default(0)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("reviews")
+}
+
+model PriceHistory {
+  id     String @id @default(cuid())
+  
+  dealId String
+  deal   Deal   @relation(fields: [dealId], references: [id])
+  
+  price        Float
+  participants Int? // for group buys
+  timestamp    DateTime @default(now())
+
+  @@map("price_history")
+}
+
+model NotificationSettings {
+  id     String @id @default(cuid())
+  
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+  
+  deals      Boolean @default(true)
+  groupBuys  Boolean @default(true)
+  priceDrops Boolean @default(true)
+  marketing  Boolean @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("notification_settings")
+}
+
+model PrivacySettings {
+  id     String @id @default(cuid())
+  
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+  
+  profileVisible Boolean @default(true)
+  shareActivity  Boolean @default(false)
+  dataCollection Boolean @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("privacy_settings")
+}
+
+// Enums
+enum DealType {
+  GROUP_BUY
+  INSTANT
+}
+
+enum DealStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum GroupBuyStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+enum CashbackStatus {
+  PENDING
+  APPROVED
+  PAID
+  CANCELLED
+}
+
+enum CashbackType {
+  ORDER
+  REFERRAL
+  BONUS
+  GROUP_BUY_BONUS
+}

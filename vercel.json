@@ -1,0 +1,105 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "nodeVersion": "20.x",
+  "env": {
+    "DATABASE_URL": {
+      "description": "PostgreSQL database connection string"
+    },
+    "NEXTAUTH_URL": {
+      "description": "NextAuth URL (your application URL)"
+    },
+    "NEXTAUTH_SECRET": {
+      "description": "NextAuth secret for session encryption"
+    },
+    "STRIPE_SECRET_KEY": {
+      "description": "Stripe secret key for payment processing"
+    },
+    "STRIPE_WEBHOOK_SECRET": {
+      "description": "Stripe webhook secret for webhook verification"
+    },
+    "EMAIL_SERVER_HOST": {
+      "description": "SMTP server host for email notifications"
+    },
+    "EMAIL_SERVER_PORT": {
+      "description": "SMTP server port"
+    },
+    "EMAIL_SERVER_USER": {
+      "description": "SMTP server username"
+    },
+    "EMAIL_SERVER_PASSWORD": {
+      "description": "SMTP server password"
+    },
+    "GOOGLE_CLIENT_ID": {
+      "description": "Google OAuth client ID"
+    },
+    "GOOGLE_CLIENT_SECRET": {
+      "description": "Google OAuth client secret"
+    },
+    "AZURE_AD_CLIENT_ID": {
+      "description": "Azure AD OAuth client ID"
+    },
+    "AZURE_AD_CLIENT_SECRET": {
+      "description": "Azure AD OAuth client secret"
+    },
+    "AZURE_AD_TENANT_ID": {
+      "description": "Azure AD tenant ID"
+    },
+    "REDIS_URL": {
+      "description": "Redis connection URL for caching"
+    },
+    "MINIO_ENDPOINT": {
+      "description": "MinIO object storage endpoint"
+    },
+    "MINIO_ACCESS_KEY": {
+      "description": "MinIO access key"
+    },
+    "MINIO_SECRET_KEY": {
+      "description": "MinIO secret key"
+    }
+  },
+  "regions": ["iad1"],
+  "functions": {
+    "api/**/*.ts": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  },
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/",
+      "permanent": false
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/:path*",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ]
+}
