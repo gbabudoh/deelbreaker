@@ -33,8 +33,12 @@ export default function OnboardingPage() {
       router.push('/auth/signin?callbackUrl=/onboarding');
       return;
     }
-    if (!isLoading && role && onboardingComplete) {
-      router.push(role === 'SELLER' ? '/seller' : '/dashboard');
+    if (!isLoading && role) {
+      if (onboardingComplete) {
+        router.push(role === 'SELLER' ? '/seller' : '/dashboard');
+      } else {
+        router.push(role === 'SELLER' ? '/onboarding/seller' : '/onboarding/buyer');
+      }
     }
   }, [status, isLoading, role, onboardingComplete, router]);
 

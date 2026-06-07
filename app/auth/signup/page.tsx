@@ -62,6 +62,7 @@ function SignUpContent() {
   const searchParams = useSearchParams()
 
   const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' })
+  const [roleType, setRoleType] = useState<'BUYER' | 'SELLER'>('BUYER')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -104,6 +105,7 @@ function SignUpContent() {
       const data = await response.json()
       if (!response.ok) throw new Error(data.message || 'Registration failed')
 
+      localStorage.setItem('db_user_role', roleType)
       setSuccess(true)
       setTimeout(async () => {
         const result = await signIn('credentials', {
@@ -123,6 +125,7 @@ function SignUpContent() {
   const handleOAuth = async (provider: string) => {
     setIsLoading(true)
     try {
+      localStorage.setItem('db_user_role', roleType)
       await signIn(provider, { callbackUrl: '/onboarding' })
     } catch {
       setError('Authentication failed. Please try again.')
@@ -286,11 +289,39 @@ function SignUpContent() {
             className="w-full max-w-md"
           >
             {/* Heading */}
-            <div className="mb-7">
+            <div className="mb-6">
               <h2 className="text-2xl lg:text-3xl font-extrabold text-gray-900 mb-1.5">Create your account</h2>
               <p className="text-gray-500 text-sm">
-                Whether you&apos;re buying or selling — you&apos;ll choose your role after sign up.
+                Choose your role to get a tailored experience.
               </p>
+            </div>
+
+            {/* Role selection tabs */}
+            <div className="grid grid-cols-2 gap-3 mb-6 bg-gray-100 p-1.5 rounded-2xl">
+              <button
+                type="button"
+                onClick={() => setRoleType('BUYER')}
+                className={`cursor-pointer flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold transition-all text-sm ${
+                  roleType === 'BUYER'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-800'
+                }`}
+              >
+                <ShoppingBag className="w-4.5 h-4.5" />
+                <span>Buyer / Consumer</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRoleType('SELLER')}
+                className={`cursor-pointer flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold transition-all text-sm ${
+                  roleType === 'SELLER'
+                    ? 'bg-white text-[#e09153] shadow-sm'
+                    : 'text-gray-500 hover:text-gray-800'
+                }`}
+              >
+                <Store className="w-4.5 h-4.5" />
+                <span>Seller / Merchant</span>
+              </button>
             </div>
 
             {/* OAuth */}
