@@ -9,8 +9,50 @@ export async function GET(
 ) {
   try {
     const resolvedParams = await params
+    const id = resolvedParams.id
+
+    // Fallback for mock deals to support prototyping
+    if (id === '1' || id === '2' || id === '3') {
+      const mockDeals: Record<string, any> = {
+        '1': {
+          id: '1',
+          title: 'iPhone 15 Pro Max 256GB',
+          category: 'Electronics',
+          originalPrice: 1199.00,
+          currentPrice: 999.00,
+          type: 'PHYSICAL_PRODUCT',
+          images: ['/api/placeholder/600/400'],
+          merchant: { name: 'TechWorld Electronics' },
+          targetCountries: ['US', 'CA']
+        },
+        '2': {
+          id: '2',
+          title: 'Nike Air Max 270',
+          category: 'Fashion',
+          originalPrice: 150.00,
+          currentPrice: 89.00,
+          type: 'PHYSICAL_PRODUCT',
+          images: ['/api/placeholder/600/400'],
+          merchant: { name: 'SportZone' },
+          targetCountries: [] // Global
+        },
+        '3': {
+          id: '3',
+          title: 'Deep Tissue Massage Package',
+          category: 'Beauty & Spa',
+          originalPrice: 150.00,
+          currentPrice: 90.00,
+          type: 'LOCAL_SERVICE',
+          images: ['/api/placeholder/600/400'],
+          merchant: { name: 'SpaRetreat' },
+          targetCountries: ['GB']
+        }
+      }
+      return NextResponse.json(mockDeals[id])
+    }
+
     const deal = await prisma.deal.findUnique({
-      where: { id: resolvedParams.id },
+      where: { id },
       include: {
         merchant: {
           select: {
@@ -20,19 +62,6 @@ export async function GET(
             verified: true,
             avgRating: true
           }
-        },
-        groupBuys: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                avatar: true
-              }
-            }
-          },
-          orderBy: { joinedAt: 'desc' },
-          take: 10
         },
         reviews: {
           include: {
@@ -52,7 +81,6 @@ export async function GET(
         },
         _count: {
           select: {
-            groupBuys: true,
             reviews: true,
             savedBy: true,
             orders: true

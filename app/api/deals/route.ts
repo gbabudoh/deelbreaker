@@ -38,6 +38,18 @@ export async function GET(request: NextRequest) {
       where.type = type
     }
 
+    const country = searchParams.get('country')
+    if (country && country !== 'Global') {
+      where.AND = [
+        {
+          OR: [
+            { targetCountries: { has: country } },
+            { targetCountries: { equals: [] } }
+          ]
+        }
+      ]
+    }
+
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
@@ -87,7 +99,6 @@ export async function GET(request: NextRequest) {
           },
           _count: {
             select: {
-              groupBuys: true,
               reviews: true,
               savedBy: true
             }
@@ -136,14 +147,12 @@ export async function POST(request: NextRequest) {
       originalPrice,
       currentPrice,
       type,
-      targetParticipants,
-      cashbackAmount,
-      cashbackPercentage,
       images,
       features,
       terms,
       duration,
-      merchantId
+      merchantId,
+      targetCountries
     } = body
 
     // Validate required fields
@@ -169,15 +178,13 @@ export async function POST(request: NextRequest) {
         currentPrice: parseFloat(currentPrice),
         discount,
         type: type as DealType,
-        targetParticipants: type === 'GROUP_BUY' ? parseInt(targetParticipants) : null,
-        cashbackAmount: type === 'INSTANT' ? parseFloat(cashbackAmount || '0') : null,
-        cashbackPercentage: type === 'INSTANT' ? parseFloat(cashbackPercentage || '0') : null,
         images: images || [],
         features: features || [],
         terms,
         endDate,
         merchantId,
-        status: DealStatus.DRAFT
+        targetCountries: targetCountries || [],
+        status: DealStatus.ACTIVE // Make live directly or standard ACTIVE status
       },
       include: {
         merchant: true

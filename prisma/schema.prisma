@@ -30,7 +30,6 @@ model User {
   // User activity
   savedDeals    SavedDeal[]
   orders        Order[]
-  groupBuys     GroupBuyParticipant[]
   cashbacks     Cashback[]
   reviews       Review[]
   
@@ -76,6 +75,7 @@ model Session {
 }
 
 model VerificationToken {
+  id         String   @id @default(cuid())
   identifier String
   token      String   @unique
   expires    DateTime
@@ -99,9 +99,13 @@ model Merchant {
   phone           String?
   
   // Platform settings
-  commissionRate  Float   @default(8.5)
+  commissionRate  Float   @default(10.0) // 10% commission
   tier           String  @default("Standard") // Standard, Premium, Enterprise
   verified       Boolean @default(false)
+  
+  // Stripe Connect onboarding settings
+  stripeConnectId String? @unique
+  isBillingActive Boolean @default(false)
   
   // Stats
   totalRevenue   Float   @default(0)
@@ -133,15 +137,6 @@ model Deal {
   type          DealType
   status        DealStatus @default(DRAFT)
   
-  // Group buy specific
-  targetParticipants Int?
-  currentParticipants Int @default(0)
-  minParticipants    Int?
-  
-  // Instant deal specific
-  cashbackAmount     Float?
-  cashbackPercentage Float?
-  
   // Media and content
   images      String[]
   features    String[]
@@ -151,6 +146,7 @@ model Deal {
   startDate   DateTime?
   endDate     DateTime?
   duration    Int? // in hours
+  targetCountries String[] // Target country codes for sale/shipping e.g. ["US", "CA"]
   
   // Merchant relation
   merchantId  String
@@ -159,9 +155,10 @@ model Deal {
   // Relations
   savedBy         SavedDeal[]
   orders          Order[]
-  groupBuys       GroupBuyParticipant[]
   priceHistory    PriceHistory[]
   reviews         Review[]
+  views           DealView[]
+  promotedCampaigns PromotedCampaign[]
   
   // Metadata
   verified    Boolean @default(false)
@@ -199,6 +196,19 @@ model Order {
   // Shipping
   shippingAddress String?
   trackingNumber  String?
+  trackingCarrier String?
+  
+  // Voucher code for local services / digital software
+  voucherCode     String?   @unique
+  
+  // Payment gateway metadata
+  stripeSessionId String?   @unique
+  stripeChargeId  String?
+  amountPaid      Float     @default(0)
+  
+  // Deadline and fulfillment times
+  deadlineDate    DateTime? // Nullable for services, set to +5 working days for products
+  shippedAt       DateTime?
   
   // Cashback
   cashbackAmount  Float?
@@ -213,33 +223,6 @@ model Order {
   updatedAt DateTime @updatedAt
 
   @@map("orders")
-}
-
-model GroupBuyParticipant {
-  id       String @id @default(cuid())
-  
-  userId   String
-  user     User   @relation(fields: [userId], references: [id])
-  dealId   String
-  deal     Deal   @relation(fields: [dealId], references: [id])
-  
-  quantity      Int
-  priceAtJoin   Float
-  currentPrice  Float
-  
-  status        GroupBuyStatus @default(ACTIVE)
-  joinedAt      DateTime @default(now())
-  
-  // Payment
-  paymentIntentId String?
-  charged         Boolean @default(false)
-  refundAmount    Float?
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([userId, dealId])
-  @@map("group_buy_participants")
 }
 
 model SavedDeal {
@@ -310,7 +293,6 @@ model PriceHistory {
   deal   Deal   @relation(fields: [dealId], references: [id])
   
   price        Float
-  participants Int? // for group buys
   timestamp    DateTime @default(now())
 
   @@map("price_history")
@@ -323,7 +305,7 @@ model NotificationSettings {
   user   User   @relation(fields: [userId], references: [id])
   
   deals      Boolean @default(true)
-  groupBuys  Boolean @default(true)
+  payouts    Boolean @default(true)
   priceDrops Boolean @default(true)
   marketing  Boolean @default(false)
   
@@ -349,10 +331,36 @@ model PrivacySettings {
   @@map("privacy_settings")
 }
 
+model DealView {
+  id        String   @id @default(cuid())
+  dealId    String
+  deal      Deal     @relation(fields: [dealId], references: [id])
+  ipAddress String?  // Optional: Used to prevent single users spamming view counts
+  createdAt DateTime @default(now())
+
+  @@index([dealId])   // Indexing critical for fast lookups
+  @@map("deal_views")
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  dealId    String?
+  eventType String   // 'VIEW', 'HOVER', 'SAVE', 'CHECKOUT_START', 'PURCHASE'
+  ipAddress String?
+  country   String?  // Resolved country code e.g. 'US'
+  createdAt DateTime @default(now())
+
+  @@index([dealId])
+  @@index([eventType])
+  @@map("analytics_events")
+}
+
 // Enums
 enum DealType {
-  GROUP_BUY
-  INSTANT
+  PHYSICAL_PRODUCT
+  LOCAL_SERVICE
+  DIGITAL_SOFTWARE
 }
 
 enum DealStatus {
@@ -366,12 +374,15 @@ enum DealStatus {
 
 enum OrderStatus {
   PENDING
-  CONFIRMED
-  PROCESSING
+  PENDING_SHIPMENT
+  PENDING_REDEMPTION
   SHIPPED
+  SHIPPED_LATE
   DELIVERED
+  REDEEMED
   CANCELLED
   REFUNDED
+  CANCELLED_EXPIRED_REFUNDED
 }
 
 enum PaymentStatus {
@@ -380,13 +391,6 @@ enum PaymentStatus {
   FAILED
   REFUNDED
   PARTIALLY_REFUNDED
-}
-
-enum GroupBuyStatus {
-  ACTIVE
-  COMPLETED
-  CANCELLED
-  EXPIRED
 }
 
 enum CashbackStatus {
@@ -400,5 +404,23 @@ enum CashbackType {
   ORDER
   REFERRAL
   BONUS
-  GROUP_BUY_BONUS
+}
+
+model PromotedCampaign {
+  id              String    @id @default(cuid())
+  dealId          String?   
+  deal            Deal?     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  title           String    
+  description     String    
+  imageUrl        String    
+  startDate       DateTime  
+  endDate         DateTime  
+  pricePaid       Float     @default(0.0) 
+  isPaidPromotion Boolean   @default(false)
+  isActive        Boolean   @default(true)
+  createdByAdmin  Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("promoted_campaigns")
 }

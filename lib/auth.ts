@@ -106,7 +106,7 @@ export const authOptions: NextAuthOptions = {
       }
       return session
     },
-    async signIn({ user, account }: { user: any; account: any; profile: any }) {
+    async signIn({ user, account }: { user: any; account: any; profile?: any }) {
       if (account?.provider === 'google') {
         // Create user preferences on first sign in
         const existingUser = await prisma.user.findUnique({
@@ -132,7 +132,7 @@ export const authOptions: NextAuthOptions = {
         data: {
           userId: user.id,
           deals: true,
-          groupBuys: true,
+          payouts: true,
           priceDrops: true,
           marketing: false,
         }

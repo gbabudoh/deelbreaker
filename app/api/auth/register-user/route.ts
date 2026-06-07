@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId: user.id,
         deals: true,
-        groupBuys: true,
+        payouts: true,
         priceDrops: true,
         marketing: false,
       }

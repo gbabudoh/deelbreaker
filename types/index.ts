@@ -43,13 +43,8 @@ export interface Deal {
   originalPrice: number
   currentPrice: number
   discount: number
-  type: 'GROUP_BUY' | 'INSTANT'
+  type: 'PHYSICAL_PRODUCT' | 'LOCAL_SERVICE' | 'DIGITAL_SOFTWARE'
   status: 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'EXPIRED' | 'CANCELLED'
-  targetParticipants?: number
-  currentParticipants: number
-  minParticipants?: number
-  cashbackAmount?: number
-  cashbackPercentage?: number
   images: string[]
   features: string[]
   terms?: string
@@ -78,10 +73,17 @@ export interface Order {
   unitPrice: number
   totalPrice: number
   discount: number
-  status: 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED'
+  status: 'PENDING' | 'PENDING_SHIPMENT' | 'PENDING_REDEMPTION' | 'SHIPPED' | 'SHIPPED_LATE' | 'DELIVERED' | 'REDEEMED' | 'CANCELLED' | 'REFUNDED' | 'CANCELLED_EXPIRED_REFUNDED'
   paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED' | 'PARTIALLY_REFUNDED'
   shippingAddress?: string
   trackingNumber?: string
+  trackingCarrier?: string
+  voucherCode?: string
+  stripeSessionId?: string
+  stripeChargeId?: string
+  amountPaid: number
+  deadlineDate?: Date
+  shippedAt?: Date
   cashbackAmount?: number
   cashbackStatus: 'PENDING' | 'APPROVED' | 'PAID' | 'CANCELLED'
   orderDate: Date
@@ -91,23 +93,7 @@ export interface Order {
   updatedAt: Date
 }
 
-export interface GroupBuyParticipant {
-  id: string
-  userId: string
-  user?: User
-  dealId: string
-  deal?: Deal
-  quantity: number
-  priceAtJoin: number
-  currentPrice: number
-  status: 'ACTIVE' | 'COMPLETED' | 'CANCELLED' | 'EXPIRED'
-  joinedAt: Date
-  paymentIntentId?: string
-  charged: boolean
-  refundAmount?: number
-  createdAt: Date
-  updatedAt: Date
-}
+// GroupBuyParticipant removed
 
 export interface Cashback {
   id: string
@@ -115,7 +101,7 @@ export interface Cashback {
   user?: User
   amount: number
   source: string
-  type: 'ORDER' | 'REFERRAL' | 'BONUS' | 'GROUP_BUY_BONUS'
+  type: 'ORDER' | 'REFERRAL' | 'BONUS'
   status: 'PENDING' | 'APPROVED' | 'PAID' | 'CANCELLED'
   description?: string
   processedAt?: Date
@@ -156,7 +142,7 @@ export interface NotificationSettings {
   id: string
   userId: string
   deals: boolean
-  groupBuys: boolean
+  payouts: boolean
   priceDrops: boolean
   marketing: boolean
   createdAt: Date
@@ -195,7 +181,7 @@ export interface DealFilters {
   minPrice?: number
   maxPrice?: number
   minDiscount?: number
-  type?: 'GROUP_BUY' | 'INSTANT'
+  type?: 'PHYSICAL_PRODUCT' | 'LOCAL_SERVICE' | 'DIGITAL_SOFTWARE'
   status?: string
   featured?: boolean
   trending?: boolean
@@ -220,7 +206,6 @@ export interface DealMetrics {
   totalRevenue: number
   avgRating: number
   reviewCount: number
-  groupBuyParticipants: number
   conversionRate: number
 }
 
@@ -232,7 +217,6 @@ export interface UserAnalytics {
   totalSpent: number
   totalCashback: number
   savedDeals: number
-  groupBuysJoined: number
   reviewsSubmitted: number
   level: string
   totalSavings: number
@@ -268,12 +252,6 @@ export interface RefundRequest {
 // WebSocket Event Types
 export interface WebSocketEvents {
   'deal-updated': Deal
-  'group-buy-progress': {
-    dealId: string
-    currentParticipants: number
-    targetParticipants: number
-    currentPrice: number
-  }
   'price-updated': {
     dealId: string
     oldPrice: number
@@ -313,11 +291,7 @@ export interface DealFormData {
   originalPrice: number
   currentPrice: number
   discount: number
-  type: 'GROUP_BUY' | 'INSTANT'
-  targetParticipants?: number
-  minParticipants?: number
-  cashbackAmount?: number
-  cashbackPercentage?: number
+  type: 'PHYSICAL_PRODUCT' | 'LOCAL_SERVICE' | 'DIGITAL_SOFTWARE'
   images: string[]
   features: string[]
   terms?: string
@@ -328,9 +302,9 @@ export interface DealFormData {
 
 // Utility Types
 export type UserType = 'user' | 'merchant' | 'admin'
-export type DealType = 'GROUP_BUY' | 'INSTANT'
+export type DealType = 'PHYSICAL_PRODUCT' | 'LOCAL_SERVICE' | 'DIGITAL_SOFTWARE'
 export type DealStatus = 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'EXPIRED' | 'CANCELLED'
-export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED'
+export type OrderStatus = 'PENDING' | 'PENDING_SHIPMENT' | 'PENDING_REDEMPTION' | 'SHIPPED' | 'SHIPPED_LATE' | 'DELIVERED' | 'REDEEMED' | 'CANCELLED' | 'REFUNDED' | 'CANCELLED_EXPIRED_REFUNDED'
 export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED' | 'PARTIALLY_REFUNDED'
 export type CashbackStatus = 'PENDING' | 'APPROVED' | 'PAID' | 'CANCELLED'
-export type CashbackType = 'ORDER' | 'REFERRAL' | 'BONUS' | 'GROUP_BUY_BONUS'
+export type CashbackType = 'ORDER' | 'REFERRAL' | 'BONUS'

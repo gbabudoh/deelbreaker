@@ -1,43 +1,98 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Store, TrendingUp, Users, DollarSign, Plus, Settings, Bell, ArrowLeft } from 'lucide-react';
-import MerchantStats from './MerchantStats';
-import DealManagement from './DealManagement';
-import CreateDeal from './CreateDeal';
-import Analytics from './Analytics';
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+import { motion } from 'framer-motion'
+import { Store, TrendingUp, DollarSign, Plus, Settings, Bell, ArrowLeft, BarChart3, CreditCard, Loader2 } from 'lucide-react'
+import MerchantStats from './MerchantStats'
+import DealManagement from './DealManagement'
+import CreateDeal from './CreateDeal'
+import Analytics from './Analytics'
+import MerchantOnboarding from './MerchantOnboarding'
+import ConnectBilling from './ConnectBilling'
 
 export default function MerchantPortal() {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState('overview');
+  const router = useRouter()
+  const { data: session, status } = useSession()
+  const [merchant, setMerchant] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('overview')
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: TrendingUp },
     { id: 'deals', label: 'Manage Deals', icon: Store },
     { id: 'create', label: 'Create Deal', icon: Plus },
-    { id: 'analytics', label: 'Analytics', icon: DollarSign },
-  ];
+    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'billing', label: 'Billing & Wallet', icon: CreditCard }
+  ]
 
-  // Mock merchant data
-  const merchantData = {
-    name: 'TechWorld Electronics',
-    email: 'merchant@techworld.com',
-    logo: '/api/placeholder/80/80',
-    memberSince: 'January 2024',
-    totalRevenue: 125847.50,
-    activeDeals: 12,
-    totalCustomers: 3456,
-    avgRating: 4.8,
-    tier: 'Premium Partner',
-    commissionRate: 8.5
-  };
+  const fetchMerchantProfile = async () => {
+    try {
+      const response = await fetch('/api/merchant/profile')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.merchant) {
+          setMerchant(data.merchant)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load merchant profile:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchMerchantProfile()
+    } else if (status === 'unauthenticated') {
+      router.push('/auth/signin?callbackUrl=/merchant')
+    }
+  }, [status])
+
+  const handleOnboardingComplete = async (onboardingData: any) => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/merchant/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(onboardingData)
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setMerchant(data.merchant)
+      } else {
+        alert('Onboarding failed. Please try again.')
+      }
+    } catch (error) {
+      console.error('Onboarding submission error:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (status === 'loading' || loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 text-[#F3AF7B] animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading merchant details...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // If authenticated but merchant profile does not exist yet
+  if (!merchant) {
+    return <MerchantOnboarding onComplete={handleOnboardingComplete} />
+  }
 
   return (
     <div className="container mx-auto px-6 py-8">
       {/* Back Button */}
-      <button 
+      <button
         onClick={() => router.push('/')}
         className="cursor-pointer inline-flex items-center gap-2 text-gray-600 hover:text-[#F3AF7B] transition-colors mb-6"
       >
@@ -52,68 +107,26 @@ export default function MerchantPortal() {
             <Store className="w-8 h-8 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">{merchantData.name}</h1>
-            <p className="text-gray-600">{merchantData.tier} • Member since {merchantData.memberSince}</p>
+            <h1 className="text-3xl font-bold text-gray-800">{merchant.name}</h1>
+            <p className="text-gray-600">
+              {merchant.tier} Partner • {merchant.businessType || 'Retailer'}
+            </p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <button className="cursor-pointer p-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
             <Bell className="w-5 h-5 text-gray-600" />
           </button>
-          <button className="cursor-pointer p-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
+          <button className="cursor-pointer p-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors" onClick={() => setActiveTab('billing')}>
             <Settings className="w-5 h-5 text-gray-600" />
           </button>
-          <button className="cursor-pointer bg-gradient-to-r from-[#F3AF7B] to-[#F4C2B8] text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300">
+          <button
+            onClick={() => setActiveTab('create')}
+            className="cursor-pointer bg-gray-900 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
+          >
             Create New Deal
           </button>
-        </div>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-2xl shadow-lg p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-500 rounded-xl flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-sm font-medium text-green-600">+15.3%</span>
-          </div>
-          <h3 className="text-2xl font-bold text-gray-800 mb-1">${merchantData.totalRevenue.toLocaleString()}</h3>
-          <p className="text-gray-600 text-sm">Total Revenue</p>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-lg p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#F3AF7B] to-[#F4C2B8] rounded-xl flex items-center justify-center">
-              <Store className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-sm font-medium text-blue-600">+3 this week</span>
-          </div>
-          <h3 className="text-2xl font-bold text-gray-800 mb-1">{merchantData.activeDeals}</h3>
-          <p className="text-gray-600 text-sm">Active Deals</p>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-lg p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl flex items-center justify-center">
-              <Users className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-sm font-medium text-purple-600">+127 this month</span>
-          </div>
-          <h3 className="text-2xl font-bold text-gray-800 mb-1">{merchantData.totalCustomers.toLocaleString()}</h3>
-          <p className="text-gray-600 text-sm">Total Customers</p>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-lg p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-sm font-medium text-orange-600">{merchantData.avgRating}/5.0</span>
-          </div>
-          <h3 className="text-2xl font-bold text-gray-800 mb-1">{merchantData.commissionRate}%</h3>
-          <p className="text-gray-600 text-sm">Commission Rate</p>
         </div>
       </div>
 
@@ -144,11 +157,12 @@ export default function MerchantPortal() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        {activeTab === 'overview' && <MerchantStats merchantData={merchantData} />}
-        {activeTab === 'deals' && <DealManagement />}
-        {activeTab === 'create' && <CreateDeal />}
-        {activeTab === 'analytics' && <Analytics />}
+        {activeTab === 'overview' && <MerchantStats merchantData={merchant} />}
+        {activeTab === 'deals' && <DealManagement merchantId={merchant.id} />}
+        {activeTab === 'create' && <CreateDeal merchantId={merchant.id} />}
+        {activeTab === 'analytics' && <Analytics merchantId={merchant.id} />}
+        {activeTab === 'billing' && <ConnectBilling merchantId={merchant.id} isStripeLinked={merchant.isBillingActive} />}
       </motion.div>
     </div>
-  );
+  )
 }

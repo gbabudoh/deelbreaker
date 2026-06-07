@@ -49,10 +49,6 @@ export const useDealUpdates = (dealId: string) => {
       setDealData(data)
     })
 
-    socket.on('group-buy-progress', (data) => {
-      setParticipants(data.participants)
-    })
-
     socket.on('price-updated', (data) => {
       setCurrentPrice(data.price)
     })
@@ -60,7 +56,6 @@ export const useDealUpdates = (dealId: string) => {
     return () => {
       socket.emit('leave-deal', dealId)
       socket.off('deal-updated')
-      socket.off('group-buy-progress')
       socket.off('price-updated')
     }
   }, [socket, dealId])

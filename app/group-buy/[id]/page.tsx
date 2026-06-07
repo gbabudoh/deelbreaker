@@ -1,21 +1,12 @@
-import { Metadata } from 'next';
-import GroupBuyDetails from '../../components/group-buy/GroupBuyDetails';
+import { redirect } from 'next/navigation';
 
 interface GroupBuyPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default function GroupBuyPage({ params }: GroupBuyPageProps) {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <GroupBuyDetails dealId={params.id} />
-    </div>
-  );
+export default async function GroupBuyPage({ params }: GroupBuyPageProps) {
+  const resolvedParams = await params;
+  redirect(`/deal/${resolvedParams.id}`);
 }
-
-export const metadata: Metadata = {
-  title: 'Group Buy Details - Deelbreaker',
-  description: 'Join the group buy and save more with community power.',
-};

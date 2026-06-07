@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { BarChart3, Users, ShoppingBag, TrendingUp, AlertCircle, CheckCircle, Clock, ArrowLeft } from 'lucide-react'
+import { BarChart3, Users, ShoppingBag, TrendingUp, AlertCircle, CheckCircle, Clock, ArrowLeft, Megaphone } from 'lucide-react'
 import AdminStats from '@/app/components/admin/AdminStats'
 import DealModeration from '@/app/components/admin/DealModeration'
 import UserManagement from '@/app/components/admin/UserManagement'
 import Analytics from '@/app/components/admin/Analytics'
+import CampaignManager from '@/app/components/admin/CampaignManager'
 
-type TabType = 'overview' | 'deals' | 'users' | 'analytics'
+type TabType = 'overview' | 'deals' | 'users' | 'analytics' | 'campaigns'
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession()
@@ -59,7 +60,8 @@ export default function AdminDashboard() {
     { id: 'overview' as TabType, label: 'Overview', icon: BarChart3 },
     { id: 'deals' as TabType, label: 'Deal Moderation', icon: ShoppingBag },
     { id: 'users' as TabType, label: 'Users', icon: Users },
-    { id: 'analytics' as TabType, label: 'Analytics', icon: TrendingUp }
+    { id: 'analytics' as TabType, label: 'Analytics', icon: TrendingUp },
+    { id: 'campaigns' as TabType, label: 'Promotions', icon: Megaphone }
   ]
 
   return (
@@ -118,6 +120,7 @@ export default function AdminDashboard() {
           {activeTab === 'deals' && <DealModeration />}
           {activeTab === 'users' && <UserManagement />}
           {activeTab === 'analytics' && <Analytics />}
+          {activeTab === 'campaigns' && <CampaignManager />}
         </motion.div>
       </div>
     </div>

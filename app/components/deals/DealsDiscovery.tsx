@@ -1,148 +1,110 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Search, Filter, Grid, List, Users, Zap, ArrowLeft } from 'lucide-react';
-import DealCard from './DealCard';
-import { FilterSidebar } from './index';
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
+import { Search, Filter, Grid, List, ArrowLeft, Package, MapPin, Laptop, Loader2 } from 'lucide-react'
+import DealCard from './DealCard'
+import { FilterSidebar } from './index'
 
-// Mock data - replace with API calls
 interface Deal {
-  id: number;
-  title: string;
-  merchant: string;
-  originalPrice: number;
-  currentPrice: number;
-  discount: number;
-  type: 'group-buy' | 'instant';
-  participants?: number;
-  targetParticipants?: number;
-  timeLeft?: string;
-  image: string;
-  category: string;
-  rating: number;
-  verified: boolean;
-  cashback?: number;
+  id: string
+  title: string
+  merchant: { name: string }
+  originalPrice: number
+  currentPrice: number
+  discount: number
+  type: 'PHYSICAL_PRODUCT' | 'LOCAL_SERVICE' | 'DIGITAL_SOFTWARE'
+  images: string[]
+  category: string
+  rating?: number
+  verified?: boolean
 }
 
-const mockDeals: Deal[] = [
-  {
-    id: 1,
-    title: 'iPhone 15 Pro Max',
-    merchant: 'TechWorld',
-    originalPrice: 1199,
-    currentPrice: 999,
-    discount: 17,
-    type: 'group-buy',
-    participants: 847,
-    targetParticipants: 1000,
-    timeLeft: '2d 14h 32m',
-    image: '/api/placeholder/300/200',
-    category: 'Electronics',
-    rating: 4.8,
-    verified: true
-  },
-  {
-    id: 2,
-    title: 'Nike Air Max 270',
-    merchant: 'SportZone',
-    originalPrice: 150,
-    currentPrice: 89,
-    discount: 41,
-    type: 'instant',
-    cashback: 15,
-    image: '/api/placeholder/300/200',
-    category: 'Fashion',
-    rating: 4.6,
-    verified: true
-  },
-  {
-    id: 3,
-    title: 'MacBook Air M3',
-    merchant: 'AppleStore',
-    originalPrice: 1299,
-    currentPrice: 1099,
-    discount: 15,
-    type: 'group-buy',
-    participants: 234,
-    targetParticipants: 500,
-    timeLeft: '5d 8h 15m',
-    image: '/api/placeholder/300/200',
-    category: 'Electronics',
-    rating: 4.9,
-    verified: true
-  },
-  {
-    id: 4,
-    title: 'Samsung 65" QLED TV',
-    merchant: 'ElectroMart',
-    originalPrice: 1499,
-    currentPrice: 899,
-    discount: 40,
-    type: 'instant',
-    cashback: 50,
-    image: '/api/placeholder/300/200',
-    category: 'Electronics',
-    rating: 4.7,
-    verified: true
-  }
-];
-
-interface FilterChangeParams {
-  categories: string[];
-  priceRange: [number, number];
-  dealType: string;
-  discount: number;
-  rating: number;
-  merchants: string[];
+interface DealsDiscoveryProps {
+  initialCategory?: string
 }
 
-export default function DealsDiscovery() {
-  const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState('featured');
-  const [deals, setDeals] = useState<Deal[]>(mockDeals);
+export default function DealsDiscovery({ initialCategory }: DealsDiscoveryProps) {
+  const router = useRouter()
+  const [searchTerm, setSearchTerm] = useState('')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [showFilters, setShowFilters] = useState(false)
+  const [activeTypeTab, setActiveTypeTab] = useState<string>('all')
+  
+  const [deals, setDeals] = useState<Deal[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedCountry, setSelectedCountry] = useState<string>('')
 
-  const handleSearch = (term: string) => {
-    setSearchTerm(term);
-    // Filter deals based on search term
-    const filtered = mockDeals.filter(deal => 
-      deal.title.toLowerCase().includes(term.toLowerCase()) ||
-      deal.merchant.toLowerCase().includes(term.toLowerCase()) ||
-      deal.category.toLowerCase().includes(term.toLowerCase())
-    );
-    setDeals(filtered);
-  };
+  const AVAILABLE_COUNTRIES = [
+    { code: 'US', name: 'United States', flag: '🇺🇸' },
+    { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
+    { code: 'CA', name: 'Canada', flag: '🇨🇦' },
+    { code: 'AU', name: 'Australia', flag: '🇦🇺' },
+    { code: 'DE', name: 'Germany', flag: '🇩🇪' },
+    { code: 'FR', name: 'France', flag: '🇫🇷' },
+    { code: 'ES', name: 'Spain', flag: '🇪🇸' },
+    { code: 'JP', name: 'Japan', flag: '🇯🇵' },
+  ]
 
-  const handleSort = (sortOption: string) => {
-    setSortBy(sortOption);
-    const sorted = [...deals].sort((a, b) => {
-      switch (sortOption) {
-        case 'price-low':
-          return a.currentPrice - b.currentPrice;
-        case 'price-high':
-          return b.currentPrice - a.currentPrice;
-        case 'discount':
-          return b.discount - a.discount;
-        case 'rating':
-          return b.rating - a.rating;
-        case 'ending-soon':
-          return a.type === 'group-buy' && b.type === 'group-buy' && a.timeLeft && b.timeLeft ? 
-            a.timeLeft.localeCompare(b.timeLeft) : 0;
-        default:
-          return 0;
+  // Detect user's region via browser locale on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.navigator && window.navigator.language) {
+      const parts = window.navigator.language.split('-')
+      if (parts.length > 1) {
+        const detected = parts[1].toUpperCase()
+        const supported = ['US', 'GB', 'CA', 'AU', 'DE', 'FR', 'ES', 'JP'].includes(detected)
+        if (supported) {
+          setSelectedCountry(detected)
+        }
       }
-    });
-    setDeals(sorted);
-  };
+    }
+  }, [])
+
+  const fetchDeals = async () => {
+    setLoading(true)
+    try {
+      let url = `/api/deals?limit=30`
+      if (initialCategory && initialCategory !== 'all') {
+        url += `&category=${encodeURIComponent(initialCategory)}`
+      }
+      if (activeTypeTab !== 'all') {
+        url += `&type=${activeTypeTab}`
+      }
+      if (searchTerm) {
+        url += `&search=${encodeURIComponent(searchTerm)}`
+      }
+      if (selectedCountry) {
+        url += `&country=${encodeURIComponent(selectedCountry)}`
+      }
+
+      const res = await fetch(url)
+      if (!res.ok) {
+        throw new Error('Failed to fetch marketplace deals')
+      }
+      const data = await res.json()
+      setDeals(data.deals || [])
+    } catch (err: any) {
+      setError(err.message || 'Error loading deals')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchDeals()
+  }, [initialCategory, activeTypeTab, selectedCountry])
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    fetchDeals()
+  }
 
   return (
     <div className="container mx-auto px-6 py-8">
       {/* Back Button */}
-      <button 
+      <button
         onClick={() => router.push('/')}
         className="cursor-pointer inline-flex items-center gap-2 text-gray-600 hover:text-[#F3AF7B] transition-colors mb-6"
       >
@@ -152,44 +114,53 @@ export default function DealsDiscovery() {
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">Discover Deals</h1>
-        <p className="text-gray-600">Find exclusive group buys and instant cashback offers</p>
+        <h1 className="text-4xl font-bold text-gray-800 mb-2">Discover Flash Deals</h1>
+        <p className="text-gray-600">Browse verified discounts on local services and physical goods</p>
       </div>
 
       {/* Search and Controls */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-        <div className="flex flex-col lg:flex-row gap-4 items-center">
+      <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-50">
+        <form onSubmit={handleSearchSubmit} className="flex flex-col lg:flex-row gap-4 items-center">
           {/* Search Bar */}
-          <div className="flex-1 relative">
+          <div className="flex-1 relative w-full">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
               placeholder="Search deals, brands, or categories..."
               value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F3AF7B] focus:border-transparent"
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F3AF7B] focus:border-transparent text-sm"
             />
           </div>
 
           {/* Controls */}
-          <div className="flex items-center gap-4">
-            {/* Sort Dropdown */}
-            <select
-              value={sortBy}
-              onChange={(e) => handleSort(e.target.value)}
-              className="px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F3AF7B]"
-            >
-              <option value="featured">Featured</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
-              <option value="discount">Highest Discount</option>
-              <option value="rating">Highest Rated</option>
-              <option value="ending-soon">Ending Soon</option>
-            </select>
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto justify-end">
+            {/* Country Filter Selector */}
+            <div className="relative w-full sm:w-auto">
+              <select
+                value={selectedCountry}
+                onChange={(e) => setSelectedCountry(e.target.value)}
+                className="w-full cursor-pointer pl-4 pr-10 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F3AF7B] focus:border-transparent text-sm font-semibold bg-white text-gray-700 appearance-none"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E")`,
+                  backgroundPosition: 'right 0.75rem center',
+                  backgroundSize: '1.25em 1.25em',
+                  backgroundRepeat: 'no-repeat'
+                }}
+              >
+                <option value="">🌍 Global / All Countries</option>
+                {AVAILABLE_COUNTRIES.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.flag} {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             {/* View Mode Toggle */}
-            <div className="flex bg-gray-100 rounded-xl p-1">
+            <div className="flex bg-gray-100 rounded-xl p-1 w-full sm:w-auto justify-center">
               <button
+                type="button"
                 onClick={() => setViewMode('grid')}
                 className={`cursor-pointer p-2 rounded-lg transition-colors ${
                   viewMode === 'grid' ? 'bg-white shadow-sm text-[#F3AF7B]' : 'text-gray-500'
@@ -198,6 +169,7 @@ export default function DealsDiscovery() {
                 <Grid className="w-5 h-5" />
               </button>
               <button
+                type="button"
                 onClick={() => setViewMode('list')}
                 className={`cursor-pointer p-2 rounded-lg transition-colors ${
                   viewMode === 'list' ? 'bg-white shadow-sm text-[#F3AF7B]' : 'text-gray-500'
@@ -209,78 +181,113 @@ export default function DealsDiscovery() {
 
             {/* Filter Toggle */}
             <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="cursor-pointer flex items-center gap-2 px-4 py-3 bg-[#F3AF7B] text-white rounded-xl hover:bg-[#F3AF7B]/90 transition-colors"
+              type="submit"
+              className="cursor-pointer w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-[#F3AF7B] text-white rounded-xl hover:bg-[#F3AF7B]/90 transition-colors text-sm font-semibold"
             >
-              <Filter className="w-5 h-5" />
-              Filters
+              Apply Search
             </button>
           </div>
-        </div>
+        </form>
       </div>
 
-      <div className="flex gap-8">
-        {/* Filter Sidebar */}
-        {showFilters && (
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="w-80 flex-shrink-0"
-          >
-            <FilterSidebar onFilterChange={(filters: FilterChangeParams) => console.log(filters)} />
-          </motion.div>
-        )}
-
+      <div className="flex flex-col lg:flex-row gap-8">
         {/* Deals Grid/List */}
         <div className="flex-1">
           {/* Deal Type Tabs */}
-          <div className="flex gap-4 mb-6">
-            <button className="cursor-pointer flex items-center gap-2 px-6 py-3 bg-[#E2FBEE] text-[#F3AF7B] rounded-xl font-semibold">
-              <Users className="w-5 h-5" />
-              Group Buys
-              <span className="bg-[#F3AF7B] text-white px-2 py-1 rounded-full text-sm">
-                {deals.filter(d => d.type === 'group-buy').length}
-              </span>
+          <div className="flex flex-wrap gap-4 mb-6">
+            <button
+              onClick={() => setActiveTypeTab('all')}
+              className={`cursor-pointer px-6 py-3 rounded-xl font-semibold text-sm transition-all border ${
+                activeTypeTab === 'all'
+                  ? 'bg-gray-900 text-white border-gray-900'
+                  : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              All Deals
             </button>
-            <button className="cursor-pointer flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
-              <Zap className="w-5 h-5" />
-              Instant Deals
-              <span className="bg-gray-400 text-white px-2 py-1 rounded-full text-sm">
-                {deals.filter(d => d.type === 'instant').length}
-              </span>
+
+            <button
+              onClick={() => setActiveTypeTab('PHYSICAL_PRODUCT')}
+              className={`cursor-pointer flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all border ${
+                activeTypeTab === 'PHYSICAL_PRODUCT'
+                  ? 'bg-[#E2FBEE] text-emerald-800 border-[#b8e8cf]'
+                  : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <Package className="w-4 h-4" />
+              Physical Products
+            </button>
+
+            <button
+              onClick={() => setActiveTypeTab('LOCAL_SERVICE')}
+              className={`cursor-pointer flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all border ${
+                activeTypeTab === 'LOCAL_SERVICE'
+                  ? 'bg-blue-50 text-blue-800 border-blue-200'
+                  : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <MapPin className="w-4 h-4" />
+              Local Services
+            </button>
+
+            <button
+              onClick={() => setActiveTypeTab('DIGITAL_SOFTWARE')}
+              className={`cursor-pointer flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all border ${
+                activeTypeTab === 'DIGITAL_SOFTWARE'
+                  ? 'bg-purple-50 text-purple-800 border-purple-200'
+                  : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <Laptop className="w-4 h-4" />
+              Digital / Software
             </button>
           </div>
 
-          {/* Deals Display */}
-          <motion.div
-            layout
-            className={`grid gap-6 ${
-              viewMode === 'grid' 
-                ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3' 
-                : 'grid-cols-1'
-            }`}
-          >
-            {deals.map((deal) => (
+          {/* Loading Indicator */}
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="w-10 h-10 text-[#F3AF7B] animate-spin mb-4" />
+              <p className="text-gray-500 text-sm">Searching flash deals...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12 text-red-500 font-semibold">{error}</div>
+          ) : (
+            <>
+              {/* Deals Display */}
               <motion.div
-                key={deal.id}
                 layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
+                className={`grid gap-6 ${
+                  viewMode === 'grid'
+                    ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
+                    : 'grid-cols-1'
+                }`}
               >
-                <DealCard deal={deal} viewMode={viewMode} />
+                {deals.map((deal) => (
+                  <motion.div
+                    key={deal.id}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <DealCard deal={deal} viewMode={viewMode} />
+                  </motion.div>
+                ))}
               </motion.div>
-            ))}
-          </motion.div>
 
-          {/* Load More */}
-          <div className="text-center mt-12">
-            <button className="cursor-pointer px-8 py-3 bg-gradient-to-r from-[#F3AF7B] to-[#F4C2B8] text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300">
-              Load More Deals
-            </button>
-          </div>
+              {deals.length === 0 && (
+                <div className="text-center py-20 bg-white border border-gray-100 rounded-3xl p-6">
+                  <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-base font-bold text-gray-700">No active deals found</h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Try altering your search keyword or selected deal type tab.
+                  </p>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>
-  );
+  )
 }

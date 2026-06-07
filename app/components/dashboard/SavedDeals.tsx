@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Clock, Users, Zap, Trash2, ExternalLink, ChevronRight, Bell, BellOff } from 'lucide-react';
+import { Heart, Clock, Trash2, ExternalLink, ChevronRight, Bell, BellOff, Package, MapPin, Laptop } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SavedDeals() {
@@ -14,10 +14,7 @@ export default function SavedDeals() {
       originalPrice: 1299,
       currentPrice: 1099,
       discount: 15,
-      type: 'group-buy',
-      participants: 234,
-      targetParticipants: 500,
-      timeLeft: '5d 8h',
+      type: 'PHYSICAL_PRODUCT',
       savedAt: '2 days ago',
       priceAlert: true
     },
@@ -28,20 +25,18 @@ export default function SavedDeals() {
       originalPrice: 399,
       currentPrice: 279,
       discount: 30,
-      type: 'instant',
-      cashback: 25,
+      type: 'PHYSICAL_PRODUCT',
       savedAt: '1 week ago',
       priceAlert: false
     },
     {
       id: 3,
-      title: 'Nintendo Switch OLED',
-      merchant: 'GameHub',
-      originalPrice: 349,
-      currentPrice: 299,
-      discount: 14,
-      type: 'instant',
-      cashback: 15,
+      title: 'Deep Tissue Massage Package',
+      merchant: 'SpaRetreat',
+      originalPrice: 150,
+      currentPrice: 90,
+      discount: 40,
+      type: 'LOCAL_SERVICE',
       savedAt: '3 days ago',
       priceAlert: true
     }
@@ -92,15 +87,20 @@ export default function SavedDeals() {
                 
                 {/* Deal Type Badge */}
                 <div className="absolute top-3 left-3">
-                  {deal.type === 'group-buy' ? (
-                    <div className="bg-blue-500 text-white px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-sm">
-                      <Users className="w-3 h-3" />
-                      Group Buy
+                  {deal.type === 'PHYSICAL_PRODUCT' ? (
+                    <div className="bg-indigo-500 text-white px-2.5 py-1 rounded-full text-[10px] font-semibold flex items-center gap-1 shadow-sm">
+                      <Package className="w-3 h-3" />
+                      Physical
+                    </div>
+                  ) : deal.type === 'LOCAL_SERVICE' ? (
+                    <div className="bg-emerald-500 text-white px-2.5 py-1 rounded-full text-[10px] font-semibold flex items-center gap-1 shadow-sm">
+                      <MapPin className="w-3 h-3" />
+                      Local Service
                     </div>
                   ) : (
-                    <div className="bg-yellow-500 text-white px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-sm">
-                      <Zap className="w-3 h-3" />
-                      Instant
+                    <div className="bg-amber-500 text-white px-2.5 py-1 rounded-full text-[10px] font-semibold flex items-center gap-1 shadow-sm">
+                      <Laptop className="w-3 h-3" />
+                      Digital
                     </div>
                   )}
                 </div>
@@ -144,35 +144,24 @@ export default function SavedDeals() {
                   <span className="text-sm text-gray-400 line-through">${deal.originalPrice}</span>
                 </div>
 
-                {/* Deal Specific Info */}
-                {deal.type === 'group-buy' ? (
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs text-gray-600">
-                        {deal.participants}/{deal.targetParticipants} joined
-                      </span>
-                      <span className="text-xs text-[#F3AF7B] font-semibold flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {deal.timeLeft}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-1.5">
-                      <div 
-                        className="bg-gradient-to-r from-[#F3AF7B] to-[#F4C2B8] h-1.5 rounded-full transition-all"
-                        style={{ width: `${(deal.participants! / deal.targetParticipants!) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="mb-4 flex items-center gap-2 text-green-600 bg-green-50 px-3 py-2 rounded-lg">
-                    <Zap className="w-4 h-4" />
-                    <span className="font-semibold text-sm">${deal.cashback} Cashback</span>
-                  </div>
-                )}
+                {/* Delivery Information */}
+                <div className="mb-4 text-xs font-semibold text-gray-500 bg-gray-50 py-1.5 px-3 rounded-lg flex items-center gap-1.5">
+                  {deal.type === 'PHYSICAL_PRODUCT' ? (
+                    <>
+                      <Package className="w-3.5 h-3.5 text-indigo-500" />
+                      <span>Est. Delivery: 3-5 Working Days</span>
+                    </>
+                  ) : (
+                    <>
+                      <MapPin className="w-3.5 h-3.5 text-emerald-500" />
+                      <span>Instant Voucher & QR Code</span>
+                    </>
+                  )}
+                </div>
 
                 {/* View Deal Button */}
                 <Link
-                  href={deal.type === 'group-buy' ? `/group-buy/${deal.id}` : `/deals/${deal.id}`}
+                  href={`/deal/${deal.id}`}
                   className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#F3AF7B] to-[#F4C2B8] text-white py-2.5 rounded-xl font-semibold text-sm shadow-sm hover:shadow-md transition-all touch-active"
                 >
                   <ExternalLink className="w-4 h-4" />

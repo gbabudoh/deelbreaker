@@ -47,11 +47,7 @@ export interface CreateDealRequest {
   originalPrice: number
   currentPrice: number
   discount: number
-  type: 'GROUP_BUY' | 'INSTANT'
-  targetParticipants?: number
-  minParticipants?: number
-  cashbackAmount?: number
-  cashbackPercentage?: number
+  type: 'PHYSICAL_PRODUCT' | 'LOCAL_SERVICE' | 'DIGITAL_SOFTWARE'
   images: string[]
   features: string[]
   terms?: string
@@ -92,7 +88,7 @@ export interface UpdateUserProfileRequest {
 
 export interface UpdateNotificationSettingsRequest {
   deals?: boolean
-  groupBuys?: boolean
+  payouts?: boolean
   priceDrops?: boolean
   marketing?: boolean
 }
@@ -107,7 +103,6 @@ export interface UpdatePrivacySettingsRequest {
 export interface CreatePaymentIntentRequest {
   dealId: string
   quantity: number
-  type: 'instant' | 'group_buy'
 }
 
 export interface CreatePaymentIntentResponse {
@@ -151,7 +146,6 @@ export interface DealMetricsResponse {
   totalRevenue: number
   avgRating: number
   reviewCount: number
-  groupBuyParticipants: number
   conversionRate: number
 }
 
@@ -163,7 +157,6 @@ export interface UserAnalyticsResponse {
   totalSpent: number
   totalCashback: number
   savedDeals: number
-  groupBuysJoined: number
   reviewsSubmitted: number
   level: string
   totalSavings: number
@@ -271,7 +264,7 @@ export interface SearchDealsRequest {
   minPrice?: number
   maxPrice?: number
   minDiscount?: number
-  type?: 'GROUP_BUY' | 'INSTANT'
+  type?: 'PHYSICAL_PRODUCT' | 'LOCAL_SERVICE' | 'DIGITAL_SOFTWARE'
   status?: string
   featured?: boolean
   trending?: boolean

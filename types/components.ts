@@ -40,7 +40,7 @@ export interface DealFiltersProps {
     minPrice?: number
     maxPrice?: number
     minDiscount?: number
-    type?: 'GROUP_BUY' | 'INSTANT'
+    type?: 'PHYSICAL_PRODUCT' | 'LOCAL_SERVICE' | 'DIGITAL_SOFTWARE'
     featured?: boolean
     trending?: boolean
   }

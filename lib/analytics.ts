@@ -15,15 +15,28 @@ export interface AnalyticsEvent {
  */
 export async function trackEvent(event: AnalyticsEvent) {
   try {
-    // Store event in database or external service
-    console.log('Event tracked:', {
+    const dealId = event.eventData?.dealId || null
+    const country = event.eventData?.country || null
+
+    // Store event in database
+    await prisma.analyticsEvent.create({
+      data: {
+        userId: event.userId || null,
+        dealId,
+        eventType: event.eventType.toUpperCase(),
+        ipAddress: event.ipAddress || null,
+        country: country || null
+      }
+    })
+
+    console.log('Event tracked in DB:', {
       type: event.eventType,
+      dealId,
       userId: event.userId,
+      country,
       timestamp: event.timestamp || new Date()
     })
 
-    // You can extend this to store in a separate analytics table
-    // or send to external services like PostHog, Mixpanel, etc.
     return { success: true }
   } catch (error) {
     console.error('Error tracking event:', error)
@@ -79,17 +92,7 @@ export async function trackDealPurchase(userId: string, dealId: string, amount: 
   })
 }
 
-/**
- * Track group buy join
- */
-export async function trackGroupBuyJoin(userId: string, dealId: string) {
-  return trackEvent({
-    userId,
-    eventType: 'group_buy_join',
-    eventData: { dealId },
-    timestamp: new Date()
-  })
-}
+
 
 /**
  * Track search query
@@ -149,8 +152,7 @@ export async function getDealMetrics(dealId: string) {
       include: {
         orders: true,
         reviews: true,
-        savedBy: true,
-        groupBuys: true
+        savedBy: true
       }
     })
 
@@ -173,7 +175,6 @@ export async function getDealMetrics(dealId: string) {
       totalRevenue,
       avgRating,
       reviewCount: deal.reviews.length,
-      groupBuyParticipants: deal.groupBuys.length,
       conversionRate: deal.orders.length > 0 ? (deal.orders.length / (deal.savedBy.length || 1)) * 100 : 0
     }
   } catch (error) {
@@ -192,7 +193,6 @@ export async function getUserAnalytics(userId: string) {
       include: {
         orders: true,
         savedDeals: true,
-        groupBuys: true,
         cashbacks: true,
         reviews: true
       }
@@ -215,7 +215,6 @@ export async function getUserAnalytics(userId: string) {
       totalSpent,
       totalCashback,
       savedDeals: user.savedDeals.length,
-      groupBuysJoined: user.groupBuys.length,
       reviewsSubmitted: user.reviews.length,
       level: user.level,
       totalSavings: user.totalSavings,

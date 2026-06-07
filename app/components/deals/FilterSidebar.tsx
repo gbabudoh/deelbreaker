@@ -105,7 +105,7 @@ export default function FilterSidebar({ onFilterChange }: FilterSidebarProps) {
             animate={{ opacity: 1, height: 'auto' }}
             className="space-y-2"
           >
-            {['all', 'group-buy', 'instant'].map((type) => (
+            {['all', 'PHYSICAL_PRODUCT', 'LOCAL_SERVICE', 'DIGITAL_SOFTWARE'].map((type) => (
               <label key={type} className="flex items-center">
                 <input
                   type="radio"
@@ -115,8 +115,11 @@ export default function FilterSidebar({ onFilterChange }: FilterSidebarProps) {
                   onChange={(e) => updateFilter('dealType', e.target.value)}
                   className="mr-3 text-[#F3AF7B] focus:ring-[#F3AF7B]"
                 />
-                <span className="text-gray-700 capitalize">
-                  {type === 'all' ? 'All Deals' : type.replace('-', ' ')}
+                <span className="text-gray-700">
+                  {type === 'all' && 'All Deals'}
+                  {type === 'PHYSICAL_PRODUCT' && 'Physical Products'}
+                  {type === 'LOCAL_SERVICE' && 'Local Services'}
+                  {type === 'DIGITAL_SOFTWARE' && 'Digital / Software'}
                 </span>
               </label>
             ))}

@@ -90,7 +90,7 @@ export async function getPersonalizedRecommendations(
       _count: {
         select: {
           reviews: true,
-          groupBuys: true
+          orders: true
         }
       }
     }
@@ -122,7 +122,7 @@ export async function getPersonalizedRecommendations(
       }
 
       // Popularity (10 points max)
-      const popularity = (deal._count.reviews + deal._count.groupBuys) / 10
+      const popularity = (deal._count.reviews + deal._count.orders) / 10
       score += Math.min(10, popularity)
       if (deal._count.reviews > 0) {
         reasons.push(`Popular with ${deal._count.reviews} reviews`)
@@ -163,21 +163,22 @@ export async function getTrendingDeals(limit: number = 10) {
       merchant: true,
       _count: {
         select: {
-          groupBuys: true,
           orders: true,
           savedBy: true
         }
       }
     },
     orderBy: {
-      currentParticipants: 'desc'
+      orders: {
+        _count: 'desc'
+      }
     },
     take: limit
   })
 
   return deals.map((deal: any) => ({
     ...deal,
-    trendScore: deal._count.groupBuys + deal._count.orders + deal._count.savedBy
+    trendScore: deal._count.orders + deal._count.savedBy
   }))
 }
 

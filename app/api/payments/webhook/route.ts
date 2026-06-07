@@ -1,193 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { stripe, verifyWebhookSignature, handleWebhookEvent } from '@/lib/stripe'
+import { stripe, verifyWebhookSignature } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
-import { sendOrderConfirmationEmail, sendCashbackNotificationEmail } from '@/lib/email'
+import { sendOrderConfirmationEmail } from '@/lib/email'
 import Stripe from 'stripe'
+import crypto from 'crypto'
 
-interface WebhookLog {
-  eventId: string
-  eventType: string
-  status: 'success' | 'failed' | 'pending'
-  error?: string
-  timestamp: Date
-  retryCount: number
-}
-
-const webhookLogs: Map<string, WebhookLog> = new Map()
-
-async function logWebhookEvent(
-  eventId: string,
-  eventType: string,
-  status: 'success' | 'failed' | 'pending',
-  error?: string
-) {
-  const log: WebhookLog = {
-    eventId,
-    eventType,
-    status,
-    error,
-    timestamp: new Date(),
-    retryCount: webhookLogs.get(eventId)?.retryCount || 0
+// Helper function to calculate 5 working days from now (skipping Sat/Sun)
+function getFiveWorkingDaysDeadline(): Date {
+  const date = new Date()
+  let addedDays = 0
+  while (addedDays < 5) {
+    date.setDate(date.getDate() + 1)
+    const day = date.getDay()
+    if (day !== 0 && day !== 6) { // Skip Sunday (0) and Saturday (6)
+      addedDays++
+    }
   }
-
-  webhookLogs.set(eventId, log)
-  console.log(`[Webhook] ${eventType} - ${status}`, log)
-}
-
-async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
-  try {
-    const { userId, dealId, quantity, discount } = paymentIntent.metadata || {}
-
-    if (!userId || !dealId) {
-      throw new Error('Missing metadata: userId or dealId')
-    }
-
-    // Find order by payment intent ID
-    const order = await prisma.order.findFirst({
-      where: {
-        userId,
-        dealId,
-        paymentStatus: 'PENDING'
-      },
-      include: { user: true, deal: true }
-    })
-
-    if (!order) {
-      throw new Error('Order not found')
-    }
-
-    // Update order status
-    await prisma.order.update({
-      where: { id: order.id },
-      data: {
-        status: 'CONFIRMED',
-        paymentStatus: 'PAID'
-      }
-    })
-
-    // Create cashback record if applicable
-    const deal = await prisma.deal.findUnique({
-      where: { id: dealId }
-    })
-
-    if (deal?.cashbackAmount) {
-      const cashback = await prisma.cashback.create({
-        data: {
-          userId,
-          amount: deal.cashbackAmount,
-          source: order.id,
-          type: 'ORDER',
-          status: 'APPROVED'
-        }
-      })
-
-      // Update order with cashback
-      await prisma.order.update({
-        where: { id: order.id },
-        data: {
-          cashbackAmount: deal.cashbackAmount,
-          cashbackStatus: 'APPROVED'
-        }
-      })
-
-      // Send cashback notification
-      await sendCashbackNotificationEmail(
-        order.user.email!,
-        order.user.name || 'Customer',
-        deal.cashbackAmount,
-        deal.cashbackAmount
-      )
-    }
-
-    // Send order confirmation email
-    await sendOrderConfirmationEmail(
-      order.user.email!,
-      order.user.name || 'Customer',
-      order.orderNumber,
-      deal?.title || 'Deal',
-      order.quantity,
-      order.totalPrice,
-      order.discount
-    )
-
-    return { processed: true }
-  } catch (error) {
-    console.error('Error handling payment succeeded:', error)
-    throw error
-  }
-}
-
-async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
-  try {
-    const { userId, dealId } = paymentIntent.metadata || {}
-
-    if (!userId || !dealId) {
-      throw new Error('Missing metadata: userId or dealId')
-    }
-
-    // Find and update order
-    const order = await prisma.order.findFirst({
-      where: {
-        userId,
-        dealId,
-        paymentStatus: 'PENDING'
-      }
-    })
-
-    if (order) {
-      await prisma.order.update({
-        where: { id: order.id },
-        data: {
-          status: 'CANCELLED',
-          paymentStatus: 'FAILED'
-        }
-      })
-    }
-
-    return { processed: true }
-  } catch (error) {
-    console.error('Error handling payment failed:', error)
-    throw error
-  }
-}
-
-async function handleChargeRefunded(charge: Stripe.Charge) {
-  try {
-    // Find order by charge ID
-    const order = await prisma.order.findFirst({
-      where: {
-        id: charge.payment_intent as string
-      }
-    })
-
-    if (order) {
-      await prisma.order.update({
-        where: { id: order.id },
-        data: {
-          status: 'REFUNDED',
-          paymentStatus: 'REFUNDED'
-        }
-      })
-
-      // Cancel associated cashback
-      if (order.cashbackStatus === 'APPROVED') {
-        await prisma.cashback.updateMany({
-          where: {
-            userId: order.userId,
-            source: order.id
-          },
-          data: {
-            status: 'CANCELLED'
-          }
-        })
-      }
-    }
-
-    return { processed: true }
-  } catch (error) {
-    console.error('Error handling charge refunded:', error)
-    throw error
-  }
+  return date
 }
 
 export async function POST(request: NextRequest) {
@@ -196,13 +25,10 @@ export async function POST(request: NextRequest) {
     const signature = request.headers.get('stripe-signature')
 
     if (!signature) {
-      return NextResponse.json(
-        { error: 'Missing signature' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
     }
 
-    // Verify webhook signature
+    // Verify signature
     const isValid = verifyWebhookSignature(
       body,
       signature,
@@ -210,49 +36,135 @@ export async function POST(request: NextRequest) {
     )
 
     if (!isValid) {
-      return NextResponse.json(
-        { error: 'Invalid signature' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
 
-    // Parse event
     const event = JSON.parse(body) as Stripe.Event
 
-    // Check if event was already processed
-    if (webhookLogs.has(event.id)) {
-      const log = webhookLogs.get(event.id)!
-      if (log.status === 'success') {
-        return NextResponse.json({ received: true })
+    // 1. Handle successful checkout payment
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session
+
+      // Pull metadata
+      const dealId = session.metadata?.dealId
+      const userId = session.metadata?.userId
+      const quantityStr = session.metadata?.quantity || '1'
+      const quantity = parseInt(quantityStr)
+
+      if (!dealId || !userId) {
+        return NextResponse.json({ error: 'Missing session metadata' }, { status: 400 })
       }
+
+      // Fetch the deal
+      const deal = await prisma.deal.findUnique({
+        where: { id: dealId },
+        include: { merchant: true }
+      })
+
+      if (!deal) {
+        return NextResponse.json({ error: 'Deal not found' }, { status: 404 })
+      }
+
+      // Fetch user details for confirmation email
+      const userObj = await prisma.user.findUnique({
+        where: { id: userId }
+      })
+
+      // Prepare fulfillment parameters based on DealType
+      let initialStatus: 'PENDING_REDEMPTION' | 'PENDING_SHIPMENT' = 'PENDING_SHIPMENT'
+      let voucherCode: string | null = null
+      let deadlineDate: Date | null = null
+
+      if (deal.type === 'LOCAL_SERVICE' || deal.type === 'DIGITAL_SOFTWARE') {
+        initialStatus = 'PENDING_REDEMPTION'
+        voucherCode = `DEEL-${crypto.randomBytes(4).toString('hex').toUpperCase()}`
+      } else if (deal.type === 'PHYSICAL_PRODUCT') {
+        initialStatus = 'PENDING_SHIPMENT'
+        deadlineDate = getFiveWorkingDaysDeadline()
+      }
+
+      const orderNumber = `ORD-${Date.now()}`
+      const amountPaid = session.amount_total ? session.amount_total / 100 : 0
+
+      // Save Order to Database
+      const order = await prisma.order.create({
+        data: {
+          orderNumber,
+          userId,
+          dealId,
+          merchantId: deal.merchantId,
+          quantity,
+          unitPrice: deal.currentPrice,
+          totalPrice: amountPaid,
+          amountPaid,
+          discount: deal.originalPrice - deal.currentPrice,
+          status: initialStatus,
+          paymentStatus: 'PAID',
+          voucherCode,
+          deadlineDate,
+          stripeSessionId: session.id,
+          stripeChargeId: session.payment_intent as string || null
+        }
+      })
+
+      // Log Analytics Event
+      try {
+        await prisma.analyticsEvent.create({
+          data: {
+            userId,
+            dealId,
+            eventType: 'PURCHASE',
+            country: session.shipping_details?.address?.country || 'US'
+          }
+        })
+      } catch (err) {
+        console.error('Failed to log purchase event silently:', err)
+      }
+
+      // Send Email confirmation if user has email
+      if (userObj?.email) {
+        try {
+          await sendOrderConfirmationEmail(
+            userObj.email,
+            userObj.name || 'Valued Customer',
+            orderNumber,
+            deal.title,
+            quantity,
+            amountPaid,
+            deal.originalPrice - deal.currentPrice
+          )
+        } catch (emailError) {
+          console.error('Webhook post-order email notification failed:', emailError)
+        }
+      }
+
+      return NextResponse.json({ received: true, orderId: order.id })
     }
 
-    await logWebhookEvent(event.id, event.type, 'pending')
+    // 2. Handle Stripe Connect wallet onboarding status updates
+    if (event.type === 'account.updated') {
+      const account = event.data.object as Stripe.Account
 
-    // Handle specific events
-    try {
-      if (event.type === 'payment_intent.succeeded') {
-        await handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent)
-      } else if (event.type === 'payment_intent.payment_failed') {
-        await handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent)
-      } else if (event.type === 'charge.refunded') {
-        await handleChargeRefunded(event.data.object as Stripe.Charge)
-      } else {
-        await handleWebhookEvent(event)
+      // Check if payouts are fully activated
+      if (account.payouts_enabled && account.details_submitted) {
+        const merchantId = account.metadata?.merchantId
+
+        if (merchantId) {
+          await prisma.merchant.update({
+            where: { id: merchantId },
+            data: { isBillingActive: true }
+          })
+          console.log(`[Stripe Connect] Billing activated for merchant: ${merchantId}`)
+        }
       }
-
-      await logWebhookEvent(event.id, event.type, 'success')
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      await logWebhookEvent(event.id, event.type, 'failed', errorMessage)
-      throw error
+      return NextResponse.json({ received: true })
     }
 
     return NextResponse.json({ received: true })
-  } catch (error) {
-    console.error('Webhook error:', error)
+  } catch (error: any) {
+    console.error('Stripe webhook processing error:', error)
     return NextResponse.json(
-      { error: 'Webhook processing failed' },
+      { error: error.message || 'Webhook processing failed' },
       { status: 500 }
     )
   }

@@ -10,17 +10,19 @@ import SavedDeals from './SavedDeals';
 import CashbackHistory from './CashbackHistory';
 import ActiveGroupBuys from './ActiveGroupBuys';
 import ProfileSettings from './ProfileSettings';
+import UserOnboarding from './UserOnboarding';
 
 function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState(tabParam || 'overview');
+  const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: TrendingUp, color: 'from-blue-400 to-blue-500' },
     { id: 'saved', label: 'Saved', icon: Heart, color: 'from-red-400 to-red-500' },
-    { id: 'active', label: 'Active', icon: Clock, color: 'from-green-400 to-green-500' },
+    { id: 'active', label: 'Orders & Vouchers', icon: Clock, color: 'from-green-400 to-green-500' },
     { id: 'cashback', label: 'Cashback', icon: Wallet, color: 'from-[#F3AF7B] to-[#F4C2B8]' },
     { id: 'profile', label: 'Profile', icon: User, color: 'from-purple-400 to-purple-500' },
   ];
@@ -43,6 +45,10 @@ function DashboardContent() {
     setActiveTab(tabId);
     router.push(`/dashboard?tab=${tabId}`, { scroll: false });
   };
+
+  if (!isOnboardingComplete) {
+    return <UserOnboarding onComplete={() => setIsOnboardingComplete(true)} />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24 lg:pb-8">
@@ -92,7 +98,11 @@ function DashboardContent() {
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-lg lg:text-2xl font-bold truncate">Hi, {userData.name.split(' ')[0]}!</h1>
-              <p className="text-white/80 text-sm lg:text-base">{userData.level}</p>
+              <div className="flex flex-wrap gap-2 mt-1">
+                <span className="text-white/80 text-xs lg:text-sm bg-white/10 px-2 py-0.5 rounded-full border border-white/20">{userData.level}</span>
+                <span className="text-white/80 text-xs lg:text-sm bg-white/10 px-2 py-0.5 rounded-full border border-white/20">Electronics</span>
+                <span className="text-white/80 text-xs lg:text-sm bg-white/10 px-2 py-0.5 rounded-full border border-white/20">Shopping</span>
+              </div>
             </div>
             <div className="hidden lg:flex items-center gap-3">
               <button className="cursor-pointer p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors touch-active">

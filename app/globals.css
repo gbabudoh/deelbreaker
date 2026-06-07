@@ -3,11 +3,11 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --primary: #F3AF7B;
-  --primary-light: #F4C2B8;
-  --secondary: #E2FBEE;
-  --gray-light: #DEDEDE;
-  --gray-medium: #AEB1AF;
+  --primary: #f3af7b;
+  --primary-light: #f4c2b8;
+  --secondary: #e2fbee;
+  --gray-light: #dedede;
+  --gray-medium: #aeb1af;
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
 }
 
@@ -39,7 +39,9 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior-y: contain;
@@ -121,7 +123,9 @@ select:disabled {
 }
 
 /* Mobile input styles */
-input, textarea, select {
+input,
+textarea,
+select {
   font-size: 16px !important; /* Prevents zoom on iOS */
 }
 
