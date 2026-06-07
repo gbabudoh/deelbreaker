@@ -132,7 +132,7 @@ export default function Header() {
 
   const navItems = [
     { name: t('discover_deals'), href: '/deals' },
-    { name: isSeller ? 'Seller Hub' : 'Dashboard', href: isSeller ? '/seller' : '/dashboard' },
+    { name: isSeller ? 'Seller Hub' : 'Dashboard', href: isSeller ? '/seller' : '/consumer/dashboard' },
     ...(isSeller ? [] : [{ name: 'For Merchants', href: '/merchant' }]),
     { name: 'How It Works', href: '#features' }
   ];
@@ -142,8 +142,8 @@ export default function Header() {
     { name: 'Home', href: '/', icon: Home },
     { name: 'Deals', href: '/deals', icon: Search },
     { name: 'Cart', href: '/cart', icon: ShoppingBag },
-    { name: 'Saved', href: '/dashboard?tab=saved', icon: Heart },
-    { name: 'Profile', href: session ? '/dashboard?tab=profile' : '/auth/signin', icon: User },
+    { name: 'Saved', href: '/consumer/dashboard?tab=saved', icon: Heart },
+    { name: 'Profile', href: session ? '/consumer/dashboard?tab=profile' : '/auth/signin', icon: User },
   ];
 
   const handleSignOut = () => {
@@ -305,7 +305,7 @@ export default function Header() {
                 )}
               </div>
 
-              <Link href="/dashboard?tab=saved" className={`flex items-center gap-1.5 transition-colors ${isActive('/dashboard') && pathname.includes('saved') ? 'text-[#F3AF7B]' : 'text-gray-600 hover:text-gray-900'}`}>
+              <Link href="/consumer/dashboard?tab=saved" className={`flex items-center gap-1.5 transition-colors ${isActive('/consumer/dashboard') && pathname.includes('saved') ? 'text-[#F3AF7B]' : 'text-gray-600 hover:text-gray-900'}`}>
                 <Heart className="w-5 h-5" />
                 <span className="text-sm font-medium">{t('saved_deals')}</span>
               </Link>
@@ -391,7 +391,7 @@ export default function Header() {
                           </Link>
                         ) : (
                           <Link
-                            href="/dashboard"
+                            href="/consumer/dashboard"
                             className="flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
                             onClick={() => setIsUserMenuOpen(false)}
                           >

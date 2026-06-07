@@ -97,7 +97,7 @@ export default function BuyerOnboardingPage() {
       }));
     } catch {}
     completeOnboarding();
-    router.push('/dashboard');
+    router.push('/consumer/dashboard');
   };
 
   const slideVariants = {

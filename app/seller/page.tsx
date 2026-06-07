@@ -32,7 +32,7 @@ export default function SellerPage() {
       return;
     }
     if (role === 'BUYER') {
-      router.push('/dashboard');
+      router.push('/consumer/dashboard');
       return;
     }
   }, [role, onboardingComplete, isLoading, router]);

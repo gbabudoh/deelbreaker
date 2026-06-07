@@ -35,7 +35,7 @@ export default function OnboardingPage() {
     }
     if (!isLoading && role) {
       if (onboardingComplete) {
-        router.push(role === 'SELLER' ? '/seller' : '/dashboard');
+        router.push(role === 'SELLER' ? '/seller' : '/consumer/dashboard');
       } else {
         router.push(role === 'SELLER' ? '/onboarding/seller' : '/onboarding/buyer');
       }

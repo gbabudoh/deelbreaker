@@ -53,7 +53,7 @@ export default function CheckoutSuccessPage() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link 
-            href="/dashboard?tab=orders"
+            href="/consumer/dashboard?tab=orders"
             className="bg-gray-900 text-white px-8 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-gray-800 transition-all shadow-xl shadow-gray-200"
           >
             <LayoutDashboard className="w-5 h-5" />

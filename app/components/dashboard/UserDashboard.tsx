@@ -52,7 +52,7 @@ function DashboardContent() {
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
-    router.push(`/dashboard?tab=${tabId}`, { scroll: false });
+    router.push(`/consumer/dashboard?tab=${tabId}`, { scroll: false });
   };
 
   if (loadingProfile) {

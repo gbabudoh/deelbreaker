@@ -27,7 +27,7 @@ const TESTIMONIALS = [
 function SignInContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
+  const callbackUrl = searchParams.get('callbackUrl') || '/consumer/dashboard'
 
   const [email, setEmail]             = useState('')
   const [password, setPassword]       = useState('')
@@ -51,7 +51,7 @@ function SignInContent() {
       if (result?.error) {
         setError('Invalid email or password. Please try again.')
       } else {
-        router.push(callbackUrl === '/' ? '/dashboard' : callbackUrl)
+        router.push(callbackUrl === '/' ? '/consumer/dashboard' : callbackUrl)
       }
     } catch {
       setError('Something went wrong. Please try again.')
@@ -63,7 +63,7 @@ function SignInContent() {
   const handleOAuth = async (provider: string) => {
     setIsLoading(true)
     try {
-      await signIn(provider, { callbackUrl: callbackUrl === '/' ? '/dashboard' : callbackUrl })
+      await signIn(provider, { callbackUrl: callbackUrl === '/' ? '/consumer/dashboard' : callbackUrl })
     } catch {
       setError('Authentication failed. Please try again.')
       setIsLoading(false)

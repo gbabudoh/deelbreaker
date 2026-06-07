@@ -172,7 +172,7 @@ export default function DashboardStats({ userData }: DashboardStatsProps) {
           <div className="bg-white rounded-xl lg:rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="flex items-center justify-between p-4 lg:p-6 border-b border-gray-100">
               <h3 className="text-base lg:text-xl font-bold text-gray-900">Recent Activity</h3>
-              <Link href="/dashboard?tab=cashback" className="text-sm text-[#F3AF7B] font-medium flex items-center gap-1">
+              <Link href="/consumer/dashboard?tab=cashback" className="text-sm text-[#F3AF7B] font-medium flex items-center gap-1">
                 View All
                 <ChevronRight className="w-4 h-4" />
               </Link>
