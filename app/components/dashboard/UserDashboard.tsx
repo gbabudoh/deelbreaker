@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Wallet, Heart, Clock, TrendingUp, Gift, Settings, Bell, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Suspense } from 'react';
 import DashboardStats from './DashboardStats';
 import SavedDeals from './SavedDeals';
@@ -15,9 +16,12 @@ import UserOnboarding from './UserOnboarding';
 function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session } = useSession();
   const tabParam = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState(tabParam || 'overview');
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: TrendingUp, color: 'from-blue-400 to-blue-500' },
@@ -27,23 +31,50 @@ function DashboardContent() {
     { id: 'profile', label: 'Profile', icon: User, color: 'from-purple-400 to-purple-500' },
   ];
 
-  // Mock user data
-  const userData = {
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@email.com',
-    avatar: '/api/placeholder/80/80',
-    memberSince: 'March 2024',
-    totalSavings: 2847.50,
-    cashbackBalance: 156.75,
-    dealsJoined: 23,
-    groupBuysCompleted: 8,
-    level: 'Gold Member',
-    nextLevelProgress: 75
-  };
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const res = await fetch('/api/user/profile');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.profile) {
+            setProfile(data.profile);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching user profile:', err);
+      } finally {
+        setLoadingProfile(false);
+      }
+    }
+    fetchProfile();
+  }, [session]);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
     router.push(`/dashboard?tab=${tabId}`, { scroll: false });
+  };
+
+  if (loadingProfile) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#F3AF7B]"></div>
+      </div>
+    );
+  }
+
+  // Fallback in case fetch fails
+  const displayProfile = profile || {
+    name: session?.user?.name || 'User',
+    email: session?.user?.email || '',
+    avatar: null,
+    memberSince: 'Joined recently',
+    totalSavings: 0,
+    cashbackBalance: 0,
+    dealsJoined: 0,
+    groupBuysCompleted: 0,
+    level: 'Bronze Member',
+    nextLevelProgress: 0
   };
 
   if (!isOnboardingComplete) {
@@ -93,15 +124,14 @@ function DashboardContent() {
           className="bg-gradient-to-br from-[#F3AF7B] to-[#F4C2B8] rounded-2xl lg:rounded-3xl p-4 lg:p-6 mb-4 lg:mb-8 text-white shadow-lg"
         >
           <div className="flex items-center gap-3 lg:gap-4 mb-4">
-            <div className="w-14 h-14 lg:w-16 lg:h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white text-lg lg:text-xl font-bold border-2 border-white/30">
-              {userData.name.split(' ').map(n => n[0]).join('')}
+            <div className="w-14 h-14 lg:w-16 lg:h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white text-lg lg:text-xl font-bold border-2 border-white/30 font-sans">
+              {displayProfile.name.split(' ').map((n: string) => n[0]).join('')}
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg lg:text-2xl font-bold truncate">Hi, {userData.name.split(' ')[0]}!</h1>
+              <h1 className="text-lg lg:text-2xl font-bold truncate">Hi, {displayProfile.name.split(' ')[0]}!</h1>
               <div className="flex flex-wrap gap-2 mt-1">
-                <span className="text-white/80 text-xs lg:text-sm bg-white/10 px-2 py-0.5 rounded-full border border-white/20">{userData.level}</span>
-                <span className="text-white/80 text-xs lg:text-sm bg-white/10 px-2 py-0.5 rounded-full border border-white/20">Electronics</span>
-                <span className="text-white/80 text-xs lg:text-sm bg-white/10 px-2 py-0.5 rounded-full border border-white/20">Shopping</span>
+                <span className="text-white/80 text-xs lg:text-sm bg-white/10 px-2 py-0.5 rounded-full border border-white/20">{displayProfile.level}</span>
+                <span className="text-white/80 text-xs lg:text-sm bg-white/10 px-2 py-0.5 rounded-full border border-white/20">{displayProfile.memberSince}</span>
               </div>
             </div>
             <div className="hidden lg:flex items-center gap-3">
@@ -117,19 +147,21 @@ function DashboardContent() {
           {/* Level Progress */}
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 lg:p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-white/90">Progress to Platinum</span>
-              <span className="text-sm font-bold">{userData.nextLevelProgress}%</span>
+              <span className="text-sm font-medium text-white/90">Progress Status</span>
+              <span className="text-sm font-bold">{displayProfile.nextLevelProgress}%</span>
             </div>
             <div className="w-full bg-white/20 rounded-full h-2 lg:h-2.5">
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: `${userData.nextLevelProgress}%` }}
+                animate={{ width: `${displayProfile.nextLevelProgress}%` }}
                 transition={{ duration: 1, ease: "easeOut" }}
                 className="bg-white h-full rounded-full"
               />
             </div>
             <p className="text-xs lg:text-sm text-white/70 mt-2">
-              2 more group buys to unlock Platinum benefits!
+              {displayProfile.level === 'Platinum Member' 
+                ? 'Maximum Platinum benefits unlocked!' 
+                : 'Join more flash deals to unlock the next membership tier benefits!'}
             </p>
           </div>
         </motion.div>
@@ -143,16 +175,16 @@ function DashboardContent() {
               </div>
               <span className="text-xs text-gray-500">Cashback</span>
             </div>
-            <p className="text-xl font-bold text-gray-900">${userData.cashbackBalance}</p>
+            <p className="text-xl font-bold text-gray-900">${displayProfile.cashbackBalance.toFixed(2)}</p>
           </div>
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                 <TrendingUp className="w-4 h-4 text-blue-600" />
               </div>
-              <span className="text-xs text-gray-500">Saved</span>
+              <span className="text-xs text-gray-500">Saved Savings</span>
             </div>
-            <p className="text-xl font-bold text-gray-900">${userData.totalSavings.toLocaleString()}</p>
+            <p className="text-xl font-bold text-gray-900">${displayProfile.totalSavings.toFixed(2)}</p>
           </div>
         </div>
 
@@ -191,11 +223,11 @@ function DashboardContent() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
-            {activeTab === 'overview' && <DashboardStats userData={userData} />}
+            {activeTab === 'overview' && <DashboardStats userData={displayProfile} />}
             {activeTab === 'saved' && <SavedDeals />}
             {activeTab === 'active' && <ActiveGroupBuys />}
             {activeTab === 'cashback' && <CashbackHistory />}
-            {activeTab === 'profile' && <ProfileSettings userData={userData} />}
+            {activeTab === 'profile' && <ProfileSettings userData={displayProfile} />}
           </motion.div>
         </AnimatePresence>
       </div>

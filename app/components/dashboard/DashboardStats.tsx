@@ -47,7 +47,7 @@ export default function DashboardStats({ userData }: DashboardStatsProps) {
     {
       icon: TrendingUp,
       label: 'Completed',
-      value: userData.groupBuysCompleted.toString(),
+      value: (userData.groupBuysCompleted ?? 0).toString(),
       change: '87% success',
       changeType: 'positive',
       color: 'from-purple-400 to-purple-500',
