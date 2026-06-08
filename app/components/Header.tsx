@@ -344,7 +344,7 @@ export default function Header() {
                   )}
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+                    className="flex items-center gap-2 text-gray-600 hover:text-gray-900 relative z-50"
                   >
                     <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center border border-gray-200">
                       <User className="w-4 h-4" />
@@ -359,56 +359,63 @@ export default function Header() {
 
                   <AnimatePresence>
                     {isUserMenuOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 overflow-hidden z-50"
-                      >
-                        <div className="px-4 py-3 border-b border-gray-100">
-                          <p className="font-semibold text-gray-800">{session.user?.name}</p>
-                          <p className="text-sm text-gray-500">{session.user?.email}</p>
-                          {role && (
-                            <span className={`inline-block mt-1.5 text-xs font-semibold px-2 py-0.5 rounded-full ${
-                              isSeller ? 'bg-[#F3AF7B]/15 text-[#F3AF7B]' : 'bg-blue-100 text-blue-700'
-                            }`}>
-                              {isSeller ? 'Seller Account' : 'Buyer Account'}
-                            </span>
-                          )}
-                        </div>
-
-                        {isSeller ? (
-                          <Link
-                            href="/seller"
-                            className="flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                            onClick={() => setIsUserMenuOpen(false)}
-                          >
-                            <span className="flex items-center gap-2">
-                              <Store className="w-4 h-4 text-[#F3AF7B]" />
-                              Seller Dashboard
-                            </span>
-                            <ChevronRight className="w-4 h-4 text-gray-400" />
-                          </Link>
-                        ) : (
-                          <Link
-                            href="/consumer/dashboard"
-                            className="flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                            onClick={() => setIsUserMenuOpen(false)}
-                          >
-                            <span>Dashboard</span>
-                            <ChevronRight className="w-4 h-4 text-gray-400" />
-                          </Link>
-                        )}
-
-                        <hr className="my-1 border-gray-100" />
-                        <button
-                          onClick={() => { handleSignOut(); setIsUserMenuOpen(false); }}
-                          className="cursor-pointer w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                      <>
+                        {/* Backdrop overlay to close when clicking outside */}
+                        <div 
+                          className="fixed inset-0 z-40 cursor-default" 
+                          onClick={() => setIsUserMenuOpen(false)} 
+                        />
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          className="absolute right-0 top-full mt-2 w-60 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 overflow-hidden z-50"
                         >
-                          <LogOut className="w-4 h-4" />
-                          Sign Out
-                        </button>
-                      </motion.div>
+                          <div className="px-4 py-3 border-b border-gray-100">
+                            <p className="font-semibold text-gray-800">{session.user?.name}</p>
+                            <p className="text-sm text-gray-500">{session.user?.email}</p>
+                            {role && (
+                              <span className={`inline-block mt-1.5 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                                isSeller ? 'bg-[#F3AF7B]/15 text-[#F3AF7B]' : 'bg-blue-100 text-blue-700'
+                              }`}>
+                                {isSeller ? 'Seller Account' : 'Buyer Account'}
+                              </span>
+                            )}
+                          </div>
+
+                          {isSeller ? (
+                            <Link
+                              href="/seller"
+                              className="flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
+                              onClick={() => setIsUserMenuOpen(false)}
+                            >
+                              <span className="flex items-center gap-2">
+                                <Store className="w-4 h-4 text-[#F3AF7B]" />
+                                Seller Dashboard
+                              </span>
+                              <ChevronRight className="w-4 h-4 text-gray-400" />
+                            </Link>
+                          ) : (
+                            <Link
+                              href="/consumer/dashboard"
+                              className="flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
+                              onClick={() => setIsUserMenuOpen(false)}
+                            >
+                              <span>Dashboard</span>
+                              <ChevronRight className="w-4 h-4 text-gray-400" />
+                            </Link>
+                          )}
+
+                          <hr className="my-1 border-gray-100" />
+                          <button
+                            onClick={() => { handleSignOut(); setIsUserMenuOpen(false); }}
+                            className="cursor-pointer w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                          >
+                            <LogOut className="w-4 h-4" />
+                            Sign Out
+                          </button>
+                        </motion.div>
+                      </>
                     )}
                   </AnimatePresence>
                 </div>
