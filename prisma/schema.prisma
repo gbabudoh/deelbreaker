@@ -238,8 +238,11 @@ model SavedDeal {
   dealId String
   deal   Deal   @relation(fields: [dealId], references: [id])
   
-  priceAlert Boolean @default(false)
-  savedAt    DateTime @default(now())
+  priceAlert      Boolean @default(false)
+  targetPrice     Float?
+  swoopaActive    Boolean @default(false)
+  lastAlertedAt   DateTime?
+  savedAt         DateTime @default(now())
 
   @@unique([userId, dealId])
   @@map("saved_deals")

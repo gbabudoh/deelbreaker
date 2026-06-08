@@ -67,18 +67,21 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { priceAlert } = body
+    const { priceAlert, targetPrice, swoopaActive } = body
 
-    const savedDeal = await prisma.savedDeal.update({
+    const data: any = {}
+    if (priceAlert !== undefined) data.priceAlert = priceAlert
+    if (targetPrice !== undefined) data.targetPrice = targetPrice === null ? null : parseFloat(targetPrice)
+    if (swoopaActive !== undefined) data.swoopaActive = swoopaActive
+
+    const savedDeal = await (prisma.savedDeal as any).update({
       where: {
         userId_dealId: {
           userId: session.user.id,
           dealId: resolvedParams.dealId
         }
       },
-      data: {
-        priceAlert: priceAlert ?? false
-      },
+      data,
       include: {
         deal: {
           include: {

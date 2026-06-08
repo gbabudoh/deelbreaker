@@ -10,7 +10,11 @@ import {
   Utensils,
   Sparkles,
   Scissors,
-  Laptop
+  Laptop,
+  Activity,
+  Ticket,
+  Home,
+  PawPrint
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -22,6 +26,10 @@ const categories = [
   { name: 'Dining', icon: Utensils, href: '/deals/dining' },
   { name: 'Beauty', icon: Scissors, href: '/deals/beauty' },
   { name: 'Tech', icon: Laptop, href: '/deals/tech' },
+  { name: 'Health', icon: Activity, href: '/deals/health' },
+  { name: 'Events', icon: Ticket, href: '/deals/events' },
+  { name: 'Home', icon: Home, href: '/deals/home' },
+  { name: 'Pets', icon: PawPrint, href: '/deals/pets' },
   { name: 'Coupons', icon: Flashlight, href: '/deals/coupons' },
 ];
 

@@ -9,6 +9,10 @@ const links = {
     { label: 'Travel', href: '/deals/travel' },
     { label: 'Technology', href: '/deals/tech' },
     { label: 'Beauty', href: '/deals/beauty' },
+    { label: 'Health & Wellness', href: '/deals/health' },
+    { label: 'Events & Activities', href: '/deals/events' },
+    { label: 'Home & Living', href: '/deals/home' },
+    { label: 'Pets', href: '/deals/pets' },
   ],
   company: [
     { label: 'About Us', href: '/about' },

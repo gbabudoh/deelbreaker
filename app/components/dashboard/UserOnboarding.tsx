@@ -12,7 +12,11 @@ import {
   Utensils, 
   ShoppingBag, 
   Plane, 
-  Laptop
+  Laptop,
+  Activity,
+  Ticket,
+  Home,
+  PawPrint
 } from 'lucide-react';
 
 interface UserOnboardingProps {
@@ -26,13 +30,34 @@ const categories = [
   { id: 'travel', name: 'Travel', icon: Plane, color: 'bg-purple-500' },
   { id: 'tech', name: 'Technology', icon: Laptop, color: 'bg-gray-800' },
   { id: 'beauty', name: 'Beauty', icon: Sparkles, color: 'bg-pink-500' },
+  { id: 'health', name: 'Health & Wellness', icon: Activity, color: 'bg-red-500' },
+  { id: 'events', name: 'Events & Activities', icon: Ticket, color: 'bg-amber-500' },
+  { id: 'home', name: 'Home & Living', icon: Home, color: 'bg-indigo-500' },
+  { id: 'pets', name: 'Pets', icon: PawPrint, color: 'bg-teal-500' },
 ];
 
 export default function UserOnboarding({ onComplete }: UserOnboardingProps) {
   const [step, setStep] = useState(1);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [location, setLocation] = useState('London');
-  const [notifications, setNotifications] = useState({ push: true, email: true });
+  const [notifications, setNotifications] = useState({ push: false, email: true });
+
+  const handlePushToggle = async () => {
+    const nextVal = !notifications.push;
+    if (nextVal) {
+      const { subscribeUserToPush } = await import('@/lib/push-subscription');
+      const success = await subscribeUserToPush();
+      if (success) {
+        setNotifications(prev => ({ ...prev, push: true }));
+      } else {
+        alert('Could not enable push notifications. Please check your browser notification permissions.');
+      }
+    } else {
+      const { unsubscribeUserFromPush } = await import('@/lib/push-subscription');
+      await unsubscribeUserFromPush();
+      setNotifications(prev => ({ ...prev, push: false }));
+    }
+  };
 
   const toggleInterest = (id: string) => {
     setSelectedInterests(prev => 
@@ -124,7 +149,7 @@ export default function UserOnboarding({ onComplete }: UserOnboardingProps) {
                     <p className="text-xs text-gray-500">Instant alerts for flash deals</p>
                   </div>
                   <button 
-                    onClick={() => setNotifications({...notifications, push: !notifications.push})}
+                    onClick={handlePushToggle}
                     className={`w-12 h-6 rounded-full transition-colors relative ${notifications.push ? 'bg-[#F3AF7B]' : 'bg-gray-300'}`}
                   >
                     <motion.div 
@@ -139,7 +164,7 @@ export default function UserOnboarding({ onComplete }: UserOnboardingProps) {
                     <p className="text-xs text-gray-500">Weekly curated top deals</p>
                   </div>
                   <button 
-                    onClick={() => setNotifications({...notifications, email: !notifications.push})}
+                    onClick={() => setNotifications({...notifications, email: !notifications.email})}
                     className={`w-12 h-6 rounded-full transition-colors relative ${notifications.email ? 'bg-[#F3AF7B]' : 'bg-gray-300'}`}
                   >
                     <motion.div 

@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
   Zap, MapPin, ShoppingBag, Utensils, Plane, Laptop, Sparkles,
-  CheckCircle, Bell, Mail, ArrowRight, ArrowLeft, Check
+  CheckCircle, Bell, Mail, ArrowRight, ArrowLeft, Check,
+  Activity, Ticket, Home, PawPrint
 } from 'lucide-react';
 import { useRole } from '@/lib/role-context';
 
@@ -17,6 +18,10 @@ const categories = [
   { id: 'travel', label: 'Travel', icon: Plane, color: 'from-purple-500 to-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' },
   { id: 'tech', label: 'Technology', icon: Laptop, color: 'from-gray-700 to-gray-900', bg: 'bg-gray-100', border: 'border-gray-300' },
   { id: 'beauty', label: 'Beauty', icon: Sparkles, color: 'from-pink-500 to-pink-600', bg: 'bg-pink-50', border: 'border-pink-200' },
+  { id: 'health', label: 'Health & Wellness', icon: Activity, color: 'from-red-500 to-red-600', bg: 'bg-red-50', border: 'border-red-200' },
+  { id: 'events', label: 'Events & Activities', icon: Ticket, color: 'from-amber-500 to-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
+  { id: 'home', label: 'Home & Living', icon: Home, color: 'from-indigo-500 to-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200' },
+  { id: 'pets', label: 'Pets', icon: PawPrint, color: 'from-teal-500 to-teal-600', bg: 'bg-teal-50', border: 'border-teal-200' },
 ];
 
 function StepIndicator({ current, total }: { current: number; total: number }) {
@@ -76,8 +81,24 @@ export default function BuyerOnboardingPage() {
   const [step, setStep] = useState(0);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [city, setCity] = useState('');
-  const [pushNotif, setPushNotif] = useState(true);
+  const [pushNotif, setPushNotif] = useState(false);
   const [emailNotif, setEmailNotif] = useState(true);
+
+  const handlePushToggle = async (enabled: boolean) => {
+    if (enabled) {
+      const { subscribeUserToPush } = await import('@/lib/push-subscription');
+      const success = await subscribeUserToPush();
+      if (success) {
+        setPushNotif(true);
+      } else {
+        alert('Could not enable push notifications. Please check your browser notification permissions.');
+      }
+    } else {
+      const { unsubscribeUserFromPush } = await import('@/lib/push-subscription');
+      await unsubscribeUserFromPush();
+      setPushNotif(false);
+    }
+  };
 
   const firstName = session?.user?.name?.split(' ')[0] || 'there';
 
@@ -210,7 +231,7 @@ export default function BuyerOnboardingPage() {
                       <Bell className="w-4 h-4 text-[#F3AF7B]" />
                     </div>
                     <div className="flex-1">
-                      <Toggle enabled={pushNotif} onChange={setPushNotif} label="Push Notifications" />
+                      <Toggle enabled={pushNotif} onChange={handlePushToggle} label="Push Notifications" />
                       <p className="text-xs text-gray-400 mt-0.5">Flash deal alerts and group buy updates</p>
                     </div>
                   </div>

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import SessionProvider from "./components/SessionProvider";
 import { CartProvider } from "@/lib/cart-context";
 import { RoleProvider } from "@/lib/role-context";
+import SpyGlassChat from "./components/SpyGlassChat";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,6 +35,7 @@ export default function RootLayout({
           <CartProvider>
             <RoleProvider>
               {children}
+              <SpyGlassChat />
             </RoleProvider>
           </CartProvider>
         </SessionProvider>

@@ -26,7 +26,8 @@ export default function CreateDeal({ merchantId }: CreateDealProps) {
 
   const categories = [
     'Electronics', 'Fashion', 'Home & Garden', 'Sports', 'Beauty',
-    'Books', 'Automotive', 'Health', 'Toys', 'Food & Beverage', 'Services'
+    'Books', 'Automotive', 'Health', 'Toys', 'Food & Beverage', 'Services',
+    'Travel', 'Events & Activities', 'Pets'
   ]
 
   const AVAILABLE_COUNTRIES = [
