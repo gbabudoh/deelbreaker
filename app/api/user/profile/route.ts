@@ -85,8 +85,8 @@ export async function GET(request: NextRequest) {
         groupBuysCompleted,
         level,
         nextLevelProgress: progress,
-        onboardingComplete: (dbUser as any).onboardingComplete,
-        role: (dbUser as any).role
+        onboardingComplete: dbUser.onboardingComplete,
+        role: dbUser.role
       }
     })
   } catch (error) {
