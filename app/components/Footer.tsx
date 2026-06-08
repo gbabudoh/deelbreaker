@@ -19,7 +19,6 @@ const links = {
   ],
   support: [
     { label: 'Help Center', href: '/help' },
-    { label: 'Merchant Portal', href: '/seller' },
     { label: 'Terms of Service', href: '/terms' },
     { label: 'Privacy Policy', href: '/privacy' },
     { label: 'Cookie Settings', href: '/cookies' },
