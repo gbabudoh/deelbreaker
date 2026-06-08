@@ -5,11 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Store, TrendingUp, ShoppingBag, Star, Bell, Settings, Plus, Search,
   Edit, Pause, Trash2, ArrowLeft, DollarSign, Users, BarChart3,
-  CreditCard, ChevronRight, Package, Zap, Clock, Download, BadgeCheck, Play
+  CreditCard, ChevronRight, Package, Zap, Clock, Download, BadgeCheck, Play, LogOut
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 import CreateDeal from '@/app/components/merchant/CreateDeal';
 import Analytics from '@/app/components/merchant/Analytics';
+import NovuNotifications from '@/app/components/notifications/NovuNotifications';
 
 const TABS = [
   { id: 'overview', label: 'Overview', icon: TrendingUp },
@@ -137,11 +139,20 @@ export default function SellerDashboard() {
               <span className="font-bold text-lg text-white hidden sm:block">Deelbreaker</span>
             </div>
             <div className="flex items-center gap-2">
-              <button className="p-2 text-gray-400 hover:text-white transition-colors rounded-xl hover:bg-white/10">
-                <Bell className="w-5 h-5" />
-              </button>
-              <button className="p-2 text-gray-400 hover:text-white transition-colors rounded-xl hover:bg-white/10">
+              <NovuNotifications variant="seller-desktop" />
+              <button 
+                onClick={() => setActiveTab('settings')}
+                className="p-2 text-gray-400 hover:text-white transition-colors rounded-xl hover:bg-white/10"
+                title="Settings"
+              >
                 <Settings className="w-5 h-5" />
+              </button>
+              <button 
+                onClick={() => signOut({ callbackUrl: '/' })}
+                className="p-2 text-gray-400 hover:text-white transition-colors rounded-xl hover:bg-white/10"
+                title="Sign Out"
+              >
+                <LogOut className="w-5 h-5" />
               </button>
             </div>
           </div>

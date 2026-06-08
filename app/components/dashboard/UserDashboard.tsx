@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, DollarSign, Heart, Clock, TrendingUp, Gift, Settings, Bell, ChevronRight, ArrowLeft } from 'lucide-react';
+import { User, DollarSign, Heart, Clock, TrendingUp, Gift, Settings, Bell, ChevronRight, ArrowLeft, LogOut } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { Suspense } from 'react';
 import DashboardStats from './DashboardStats';
 import SavedDeals from './SavedDeals';
@@ -94,8 +94,16 @@ function DashboardContent() {
             <button 
               onClick={() => handleTabChange('profile')}
               className="cursor-pointer p-2 text-gray-600 hover:text-[#F3AF7B] transition-colors touch-active rounded-full"
+              title="Settings"
             >
               <Settings className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={() => signOut({ callbackUrl: '/' })}
+              className="cursor-pointer p-2 text-gray-600 hover:text-[#F3AF7B] transition-colors touch-active rounded-full"
+              title="Sign Out"
+            >
+              <LogOut className="w-5 h-5" />
             </button>
           </div>
 
@@ -137,9 +145,17 @@ function DashboardContent() {
               <NovuNotifications variant="dashboard-desktop" />
               <button 
                 onClick={() => handleTabChange('profile')}
-                className="cursor-pointer p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors touch-active"
+                className="cursor-pointer p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors touch-active text-white flex items-center justify-center"
+                title="Settings"
               >
                 <Settings className="w-5 h-5" />
+              </button>
+              <button 
+                onClick={() => signOut({ callbackUrl: '/' })}
+                className="cursor-pointer p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors touch-active text-white flex items-center justify-center"
+                title="Sign Out"
+              >
+                <LogOut className="w-5 h-5" />
               </button>
             </div>
           </div>

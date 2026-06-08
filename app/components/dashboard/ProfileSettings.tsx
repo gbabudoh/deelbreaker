@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Bell, Shield, CreditCard, Smartphone, ChevronRight, Camera, LogOut, HelpCircle, FileText } from 'lucide-react';
+import { signOut } from 'next-auth/react';
+
 
 interface UserData {
   name: string;
@@ -248,7 +250,10 @@ export default function ProfileSettings({ userData }: ProfileSettingsProps) {
         transition={{ delay: 0.4 }}
         className="space-y-3"
       >
-        <button className="cursor-pointer w-full flex items-center justify-center gap-2 p-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-medium transition-colors touch-active">
+        <button 
+          onClick={() => signOut({ callbackUrl: '/' })}
+          className="cursor-pointer w-full flex items-center justify-center gap-2 p-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-medium transition-colors touch-active"
+        >
           <LogOut className="w-5 h-5" />
           Sign Out
         </button>
