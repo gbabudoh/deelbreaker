@@ -10,6 +10,8 @@ import DashboardStats from './DashboardStats';
 import SavedDeals from './SavedDeals';
 import ActiveGroupBuys from './ActiveGroupBuys';
 import ProfileSettings from './ProfileSettings';
+import NovuNotifications from '../notifications/NovuNotifications';
+
 
 function DashboardContent() {
   const router = useRouter();
@@ -88,13 +90,7 @@ function DashboardContent() {
           </button>
           <h1 className="text-lg font-semibold text-gray-900">Dashboard</h1>
           <div className="flex items-center gap-1">
-            <button 
-              onClick={() => handleTabChange('profile')}
-              className="cursor-pointer p-2 text-gray-600 hover:text-[#F3AF7B] transition-colors relative touch-active rounded-full"
-            >
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            <NovuNotifications variant="dashboard-mobile" />
             <button 
               onClick={() => handleTabChange('profile')}
               className="cursor-pointer p-2 text-gray-600 hover:text-[#F3AF7B] transition-colors touch-active rounded-full"
@@ -102,6 +98,7 @@ function DashboardContent() {
               <Settings className="w-5 h-5" />
             </button>
           </div>
+
         </div>
       </div>
 
@@ -137,12 +134,7 @@ function DashboardContent() {
               </div>
             </div>
             <div className="hidden lg:flex items-center gap-3">
-              <button 
-                onClick={() => handleTabChange('profile')}
-                className="cursor-pointer p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors touch-active"
-              >
-                <Bell className="w-5 h-5" />
-              </button>
+              <NovuNotifications variant="dashboard-desktop" />
               <button 
                 onClick={() => handleTabChange('profile')}
                 className="cursor-pointer p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors touch-active"

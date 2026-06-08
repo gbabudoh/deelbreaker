@@ -24,6 +24,7 @@
     "@babel/runtime": "^7.26.0",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@next/third-parties": "^16.1.1",
+    "@novu/react": "^3.17.0",
     "@panva/hkdf": "^1.2.1",
     "@prisma/client": "^5.15.0",
     "bcryptjs": "^2.4.3",

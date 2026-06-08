@@ -10,6 +10,8 @@ import { useTranslation } from 'react-i18next';
 import i18n from '@/lib/i18n';
 import { useCart } from '@/lib/cart-context';
 import { useRole } from '@/lib/role-context';
+import NovuNotifications from './notifications/NovuNotifications';
+
 
 const languages = [
   { code: 'en', name: 'English', flag: '🇬🇧' },
@@ -342,8 +344,10 @@ export default function Header() {
                       Complete Setup
                     </Link>
                   )}
+                  <NovuNotifications variant="header-desktop" />
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+
                     className="flex items-center gap-2 text-gray-600 hover:text-gray-900 relative z-50"
                   >
                     <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center border border-gray-200">
@@ -439,7 +443,9 @@ export default function Header() {
 
             {/* Mobile Actions */}
             <div className="flex lg:hidden items-center ml-auto gap-3">
+              <NovuNotifications variant="header-mobile" />
               <button className="md:hidden p-2 text-gray-600">
+
                 <SearchIcon className="w-5 h-5" />
               </button>
               <button
