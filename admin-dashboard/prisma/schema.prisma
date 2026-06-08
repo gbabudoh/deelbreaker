@@ -1,0 +1,526 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  phone     String?
+  address   String?
+  avatar    String?
+  
+  // Authentication
+  emailVerified DateTime?
+  accounts      Account[]
+  sessions      Session[]
+  
+  // User preferences
+  notifications NotificationSettings?
+  privacy       PrivacySettings?
+  
+  // User activity
+  savedDeals    SavedDeal[]
+  orders        Order[]
+  cashbacks     Cashback[]
+  reviews       Review[]
+  
+  // Gamification
+  level         String   @default("Bronze")
+  totalSavings  Float    @default(0)
+  joinedAt      DateTime @default(now())
+  
+  // Onboarding
+  onboardingComplete Boolean @default(false)
+  role               String?  // 'BUYER' or 'SELLER'
+  
+  // Admin actions
+  isFrozen      Boolean   @default(false)
+  frozenReason  String?
+  isBanned      Boolean   @default(false)
+  banReason     String?
+  disputes      Dispute[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  id         String   @id @default(cuid())
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
+
+model Merchant {
+  id          String @id @default(cuid())
+  name        String
+  email       String @unique
+  logo        String?
+  description String?
+  website     String?
+  
+  // Business info
+  businessType    String?
+  taxId           String?
+  address         String?
+  phone           String?
+  
+  // Platform settings
+  commissionRate  Float   @default(10.0) // 10% commission
+  tier           String  @default("Standard") // Standard, Premium, Enterprise
+  verified       Boolean @default(false)
+  
+  // Stripe Connect onboarding settings
+  stripeConnectId String? @unique
+  isBillingActive Boolean @default(false)
+  onboardingComplete Boolean @default(false)
+  
+  // Stats
+  totalRevenue   Float   @default(0)
+  totalCustomers Int     @default(0)
+  avgRating      Float   @default(0)
+  
+  deals     Deal[]
+  orders    Order[]
+  reviews   Review[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("merchants")
+}
+
+model Deal {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  category    String
+  
+  // Pricing
+  originalPrice Float
+  currentPrice  Float
+  discount      Float
+  
+  // Deal type and settings
+  type          DealType
+  status        DealStatus @default(DRAFT)
+  
+  // Media and content
+  images      String[]
+  features    String[]
+  terms       String?
+  
+  // Timing
+  startDate   DateTime?
+  endDate     DateTime?
+  duration    Int? // in hours
+  targetCountries String[] // Target country codes for sale/shipping e.g. ["US", "CA"]
+  
+  // Merchant relation
+  merchantId  String
+  merchant    Merchant @relation(fields: [merchantId], references: [id])
+  
+  // Relations
+  savedBy         SavedDeal[]
+  orders          Order[]
+  priceHistory    PriceHistory[]
+  reviews         Review[]
+  views           DealView[]
+  promotedCampaigns PromotedCampaign[]
+  
+  // Metadata
+  verified    Boolean @default(false)
+  featured    Boolean @default(false)
+  trending    Boolean @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("deals")
+}
+
+model Order {
+  id       String      @id @default(cuid())
+  orderNumber String   @unique
+  
+  // Relations
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  dealId     String
+  deal       Deal     @relation(fields: [dealId], references: [id])
+  merchantId String
+  merchant   Merchant @relation(fields: [merchantId], references: [id])
+  
+  // Order details
+  quantity    Int
+  unitPrice   Float
+  totalPrice  Float
+  discount    Float   @default(0)
+  
+  // Status and tracking
+  status      OrderStatus @default(PENDING)
+  paymentStatus PaymentStatus @default(PENDING)
+  
+  // Shipping
+  shippingAddress String?
+  trackingNumber  String?
+  trackingCarrier String?
+  
+  // Voucher code for local services / digital software
+  voucherCode     String?   @unique
+  
+  // Payment gateway metadata
+  stripeSessionId String?   @unique
+  stripeChargeId  String?
+  amountPaid      Float     @default(0)
+  
+  // Deadline and fulfillment times
+  deadlineDate    DateTime? // Nullable for services, set to +5 working days for products
+  shippedAt       DateTime?
+  
+  // Cashback
+  cashbackAmount  Float?
+  cashbackStatus  CashbackStatus @default(PENDING)
+  
+  // Timestamps
+  orderDate    DateTime @default(now())
+  shippedDate  DateTime?
+  deliveredDate DateTime?
+  
+  dispute      Dispute?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("orders")
+}
+
+model SavedDeal {
+  id     String @id @default(cuid())
+  
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  dealId String
+  deal   Deal   @relation(fields: [dealId], references: [id])
+  
+  priceAlert      Boolean @default(false)
+  targetPrice     Float?
+  swoopaActive    Boolean @default(false)
+  lastAlertedAt   DateTime?
+  savedAt         DateTime @default(now())
+
+  @@unique([userId, dealId])
+  @@map("saved_deals")
+}
+
+model Cashback {
+  id       String @id @default(cuid())
+  
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
+  
+  amount   Float
+  source   String // order_id, referral, bonus, etc.
+  type     CashbackType
+  status   CashbackStatus @default(PENDING)
+  
+  description String?
+  
+  // Processing
+  processedAt DateTime?
+  paidOut     Boolean @default(false)
+  paidOutAt   DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cashbacks")
+}
+
+model Review {
+  id       String @id @default(cuid())
+  
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  dealId     String?
+  deal       Deal?    @relation(fields: [dealId], references: [id])
+  merchantId String?
+  merchant   Merchant? @relation(fields: [merchantId], references: [id])
+  
+  rating     Int // 1-5
+  title      String?
+  content    String
+  verified   Boolean @default(false)
+  helpful    Int     @default(0)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("reviews")
+}
+
+model PriceHistory {
+  id     String @id @default(cuid())
+  
+  dealId String
+  deal   Deal   @relation(fields: [dealId], references: [id])
+  
+  price        Float
+  timestamp    DateTime @default(now())
+
+  @@map("price_history")
+}
+
+model NotificationSettings {
+  id     String @id @default(cuid())
+  
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+  
+  deals      Boolean @default(true)
+  payouts    Boolean @default(true)
+  priceDrops Boolean @default(true)
+  marketing  Boolean @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("notification_settings")
+}
+
+model PrivacySettings {
+  id     String @id @default(cuid())
+  
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+  
+  profileVisible Boolean @default(true)
+  shareActivity  Boolean @default(false)
+  dataCollection Boolean @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("privacy_settings")
+}
+
+model DealView {
+  id        String   @id @default(cuid())
+  dealId    String
+  deal      Deal     @relation(fields: [dealId], references: [id])
+  ipAddress String?  // Optional: Used to prevent single users spamming view counts
+  createdAt DateTime @default(now())
+
+  @@index([dealId])   // Indexing critical for fast lookups
+  @@map("deal_views")
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  dealId    String?
+  eventType String   // 'VIEW', 'HOVER', 'SAVE', 'CHECKOUT_START', 'PURCHASE'
+  ipAddress String?
+  country   String?  // Resolved country code e.g. 'US'
+  createdAt DateTime @default(now())
+
+  @@index([dealId])
+  @@index([eventType])
+  @@map("analytics_events")
+}
+
+// Enums
+enum DealType {
+  PHYSICAL_PRODUCT
+  LOCAL_SERVICE
+  DIGITAL_SOFTWARE
+}
+
+enum DealStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+enum OrderStatus {
+  PENDING
+  PENDING_SHIPMENT
+  PENDING_REDEMPTION
+  SHIPPED
+  SHIPPED_LATE
+  DELIVERED
+  REDEEMED
+  CANCELLED
+  REFUNDED
+  CANCELLED_EXPIRED_REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum CashbackStatus {
+  PENDING
+  APPROVED
+  PAID
+  CANCELLED
+}
+
+enum CashbackType {
+  ORDER
+  REFERRAL
+  BONUS
+}
+
+model PromotedCampaign {
+  id              String    @id @default(cuid())
+  dealId          String?   
+  deal            Deal?     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  title           String    
+  description     String    
+  imageUrl        String    
+  startDate       DateTime  
+  endDate         DateTime  
+  pricePaid       Float     @default(0.0) 
+  isPaidPromotion Boolean   @default(false)
+  isActive        Boolean   @default(true)
+  createdByAdmin  Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("promoted_campaigns")
+}
+
+model AdminUser {
+  id           String            @id @default(cuid())
+  email        String            @unique
+  name         String?
+  passwordHash String
+  role         AdminRole         @default(SUB_ADMIN)
+  permissions  AdminPermissions?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@map("admin_users")
+}
+
+model AdminPermissions {
+  id              String    @id @default(cuid())
+  adminUserId     String    @unique
+  adminUser       AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  manageDeals     Boolean   @default(false)
+  manageUsers     Boolean   @default(false)
+  manageBanners   Boolean   @default(false)
+  resolveDisputes Boolean   @default(false)
+  manageAdmins    Boolean   @default(false)
+
+  @@map("admin_permissions")
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  SUB_ADMIN
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  icon        String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("categories")
+}
+
+model Banner {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  imageUrl    String
+  linkUrl     String?
+  isActive    Boolean  @default(true)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("banners")
+}
+
+model Dispute {
+  id          String        @id @default(cuid())
+  orderId     String        @unique
+  order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reason      String
+  details     String
+  status      DisputeStatus @default(PENDING)
+  resolution  String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("disputes")
+}
+
+enum DisputeStatus {
+  PENDING
+  INVESTIGATING
+  RESOLVED
+  REJECTED
+}
