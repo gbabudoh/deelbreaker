@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
         address,
         phone,
         onboardingComplete: true
-      },
+      } as any,
       create: {
         name,
         email: session.user.email,
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         phone,
         commissionRate: 10.0, // Default 10% marketplace commission
         onboardingComplete: true
-      }
+      } as any
     })
 
     return NextResponse.json({ success: true, merchant })

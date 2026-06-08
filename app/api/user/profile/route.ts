@@ -85,8 +85,8 @@ export async function GET(request: NextRequest) {
         groupBuysCompleted,
         level,
         nextLevelProgress: progress,
-        onboardingComplete: dbUser.onboardingComplete,
-        role: dbUser.role
+        onboardingComplete: (dbUser as any).onboardingComplete,
+        role: (dbUser as any).role
       }
     })
   } catch (error) {
@@ -116,8 +116,8 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({
       success: true,
       profile: {
-        onboardingComplete: updatedUser.onboardingComplete,
-        role: updatedUser.role
+        onboardingComplete: (updatedUser as any).onboardingComplete,
+        role: (updatedUser as any).role
       }
     })
   } catch (error) {
