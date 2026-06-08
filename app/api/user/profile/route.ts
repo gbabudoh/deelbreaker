@@ -25,12 +25,6 @@ export async function GET(request: NextRequest) {
               }
             }
           }
-        },
-        cashbacks: {
-          select: {
-            amount: true,
-            status: true
-          }
         }
       }
     })
@@ -45,10 +39,7 @@ export async function GET(request: NextRequest) {
       order => ['DELIVERED', 'REDEEMED', 'SHIPPED', 'SHIPPED_LATE'].includes(order.status)
     ).length
     
-    // Sum up approved/paid cashback balance
-    const cashbackBalance = dbUser.cashbacks
-      .filter(c => c.status === 'APPROVED' || c.status === 'PAID')
-      .reduce((sum, c) => sum + c.amount, 0)
+
 
     const level = 'Consumer Account'
     const progress = 0
@@ -64,7 +55,6 @@ export async function GET(request: NextRequest) {
         avatar: dbUser.avatar || null,
         memberSince,
         totalSavings: dbUser.totalSavings,
-        cashbackBalance,
         dealsJoined,
         groupBuysCompleted,
         level,

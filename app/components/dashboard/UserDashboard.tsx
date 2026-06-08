@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Wallet, Heart, Clock, TrendingUp, Gift, Settings, Bell, ChevronRight, ArrowLeft } from 'lucide-react';
+import { User, DollarSign, Heart, Clock, TrendingUp, Gift, Settings, Bell, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Suspense } from 'react';
 import DashboardStats from './DashboardStats';
 import SavedDeals from './SavedDeals';
-import CashbackHistory from './CashbackHistory';
 import ActiveGroupBuys from './ActiveGroupBuys';
 import ProfileSettings from './ProfileSettings';
 
@@ -25,7 +24,6 @@ function DashboardContent() {
     { id: 'overview', label: 'Overview', icon: TrendingUp, color: 'from-blue-400 to-blue-500' },
     { id: 'saved', label: 'Saved', icon: Heart, color: 'from-red-400 to-red-500' },
     { id: 'active', label: 'Orders & Vouchers', icon: Clock, color: 'from-green-400 to-green-500' },
-    { id: 'cashback', label: 'Cashback', icon: Wallet, color: 'from-[#F3AF7B] to-[#F4C2B8]' },
     { id: 'profile', label: 'Profile', icon: User, color: 'from-purple-400 to-purple-500' },
   ];
 
@@ -144,7 +142,7 @@ function DashboardContent() {
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 lg:p-4">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-white/95">Account Summary</h2>
             <p className="text-xs lg:text-sm text-white/85 mt-1 leading-relaxed">
-              Welcome to your personal Deelbreaker panel. Track your purchased products, claim service vouchers, review details of active instant deals, and check your cashback wallet.
+              Welcome to your personal Deelbreaker panel. Track your purchased products, claim service vouchers, review details of active instant deals, and check your account details.
             </p>
           </div>
         </motion.div>
@@ -154,20 +152,20 @@ function DashboardContent() {
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                <Wallet className="w-4 h-4 text-green-600" />
+                <DollarSign className="w-4 h-4 text-green-600" />
               </div>
-              <span className="text-xs text-gray-500">Cashback</span>
+              <span className="text-xs text-gray-500">Total Savings</span>
             </div>
-            <p className="text-xl font-bold text-gray-900">${displayProfile.cashbackBalance.toFixed(2)}</p>
+            <p className="text-xl font-bold text-gray-900">${displayProfile.totalSavings.toFixed(2)}</p>
           </div>
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                 <TrendingUp className="w-4 h-4 text-blue-600" />
               </div>
-              <span className="text-xs text-gray-500">Saved Savings</span>
+              <span className="text-xs text-gray-500">Deals Joined</span>
             </div>
-            <p className="text-xl font-bold text-gray-900">${displayProfile.totalSavings.toFixed(2)}</p>
+            <p className="text-xl font-bold text-gray-900">{displayProfile.dealsJoined}</p>
           </div>
         </div>
 
@@ -209,7 +207,6 @@ function DashboardContent() {
             {activeTab === 'overview' && <DashboardStats userData={displayProfile} />}
             {activeTab === 'saved' && <SavedDeals />}
             {activeTab === 'active' && <ActiveGroupBuys />}
-            {activeTab === 'cashback' && <CashbackHistory />}
             {activeTab === 'profile' && <ProfileSettings userData={displayProfile} />}
           </motion.div>
         </AnimatePresence>

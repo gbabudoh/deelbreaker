@@ -6,7 +6,6 @@ import Link from 'next/link';
 
 interface UserData {
   totalSavings: number;
-  cashbackBalance: number;
   dealsJoined: number;
   groupBuysCompleted: number;
 }
@@ -25,15 +24,6 @@ export default function DashboardStats({ userData }: DashboardStatsProps) {
       changeType: 'positive',
       color: 'from-green-400 to-green-500',
       bgColor: 'bg-green-50'
-    },
-    {
-      icon: Gift,
-      label: 'Cashback',
-      value: `$${userData.cashbackBalance}`,
-      change: '+$23.50',
-      changeType: 'positive',
-      color: 'from-[#F3AF7B] to-[#F4C2B8]',
-      bgColor: 'bg-orange-50'
     },
     {
       icon: Users,
@@ -56,16 +46,6 @@ export default function DashboardStats({ userData }: DashboardStatsProps) {
   ];
 
   const recentActivity = [
-    {
-      type: 'cashback',
-      title: 'Cashback Earned',
-      description: 'Nike Air Max 270',
-      amount: '+$15.00',
-      time: '2h ago',
-      icon: DollarSign,
-      iconBg: 'bg-green-100',
-      iconColor: 'text-green-600'
-    },
     {
       type: 'order',
       title: 'Order Shipped',
@@ -172,7 +152,7 @@ export default function DashboardStats({ userData }: DashboardStatsProps) {
           <div className="bg-white rounded-xl lg:rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="flex items-center justify-between p-4 lg:p-6 border-b border-gray-100">
               <h3 className="text-base lg:text-xl font-bold text-gray-900">Recent Activity</h3>
-              <Link href="/consumer/dashboard?tab=cashback" className="text-sm text-[#F3AF7B] font-medium flex items-center gap-1">
+              <Link href="/consumer/dashboard?tab=active" className="text-sm text-[#F3AF7B] font-medium flex items-center gap-1">
                 View All
                 <ChevronRight className="w-4 h-4" />
               </Link>
@@ -203,20 +183,8 @@ export default function DashboardStats({ userData }: DashboardStatsProps) {
           </div>
         </div>
 
-        {/* Sidebar - Desktop Only Quick Actions + Cashback Card */}
+        {/* Sidebar - Desktop Only Quick Actions */}
         <div className="space-y-4 lg:space-y-6">
-          {/* Cashback Card */}
-          <div className="bg-gradient-to-br from-[#F3AF7B] to-[#F4C2B8] rounded-xl lg:rounded-2xl p-4 lg:p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm lg:text-lg font-bold">Available Cashback</h3>
-              <Zap className="w-5 h-5 opacity-80" />
-            </div>
-            <p className="text-2xl lg:text-3xl font-bold mb-4">${userData.cashbackBalance}</p>
-            <button className="cursor-pointer w-full bg-white/20 hover:bg-white/30 text-white py-2.5 lg:py-3 px-4 rounded-xl font-semibold transition-colors touch-active backdrop-blur-sm">
-              Withdraw to Bank
-            </button>
-          </div>
-
           {/* Quick Actions - Desktop */}
           <div className="hidden lg:block bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
