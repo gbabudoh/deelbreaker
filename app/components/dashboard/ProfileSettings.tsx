@@ -11,7 +11,7 @@ interface UserData {
 
 interface NotificationSettings {
   deals: boolean;
-  groupBuys: boolean;
+  payouts: boolean;
   priceDrops: boolean;
   marketing: boolean;
 }
@@ -33,7 +33,7 @@ export default function ProfileSettings({ userData }: ProfileSettingsProps) {
     phone: '+1 (555) 123-4567',
     notifications: {
       deals: true,
-      groupBuys: true,
+      payouts: true,
       priceDrops: true,
       marketing: false
     } as NotificationSettings,
@@ -163,7 +163,7 @@ export default function ProfileSettings({ userData }: ProfileSettingsProps) {
         <div className="divide-y divide-gray-50">
           {[
             { key: 'deals' as keyof NotificationSettings, label: 'New Deals', desc: 'Get notified about new deals' },
-            { key: 'groupBuys' as keyof NotificationSettings, label: 'Group Buys', desc: 'Updates on group buy opportunities' },
+            { key: 'payouts' as keyof NotificationSettings, label: 'Payouts', desc: 'Updates when cashback is processed' },
             { key: 'priceDrops' as keyof NotificationSettings, label: 'Price Drops', desc: 'When saved items drop in price' },
             { key: 'marketing' as keyof NotificationSettings, label: 'Marketing', desc: 'Promotional emails & newsletters' },
           ].map((item) => (

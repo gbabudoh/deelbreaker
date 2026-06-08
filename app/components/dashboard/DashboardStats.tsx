@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { DollarSign, TrendingUp, Users, Gift, Clock, Star, ChevronRight, Zap } from 'lucide-react';
+import { DollarSign, TrendingUp, Users, Gift, Clock, Star, ChevronRight, Zap, Heart } from 'lucide-react';
 import Link from 'next/link';
 
 interface UserData {
@@ -67,12 +67,12 @@ export default function DashboardStats({ userData }: DashboardStatsProps) {
       iconColor: 'text-green-600'
     },
     {
-      type: 'group-buy',
-      title: 'Group Buy Joined',
+      type: 'order',
+      title: 'Order Shipped',
       description: 'iPhone 15 Pro Max',
-      amount: 'Pending',
+      amount: 'Shipped',
       time: '1d ago',
-      icon: Users,
+      icon: Clock,
       iconBg: 'bg-blue-100',
       iconColor: 'text-blue-600'
     },
@@ -89,7 +89,7 @@ export default function DashboardStats({ userData }: DashboardStatsProps) {
   ];
 
   const quickActions = [
-    { icon: Users, label: 'Browse Group Buys', href: '/deals?type=group-buy', color: 'from-[#F3AF7B] to-[#F4C2B8]' },
+    { icon: Heart, label: 'Saved Deals', href: '/consumer/dashboard?tab=saved', color: 'from-red-400 to-red-500' },
     { icon: Zap, label: 'Instant Deals', href: '/deals?type=instant', color: 'from-yellow-400 to-yellow-500' },
     { icon: Gift, label: 'Refer Friends', href: '/referral', color: 'from-purple-400 to-purple-500' },
   ];
