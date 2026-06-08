@@ -18,7 +18,9 @@ export default withAuth(
           '/auth/signup',
           '/auth/error',
           '/auth/forgot-password',
-          '/api/auth'
+          '/api/auth',
+          '/admin',
+          '/api/admin',
         ]
         
         // Check if the current path is public

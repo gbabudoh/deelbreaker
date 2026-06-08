@@ -42,6 +42,13 @@ model User {
   onboardingComplete Boolean @default(false)
   role               String?  // 'BUYER' or 'SELLER'
   
+  // Admin actions
+  isFrozen      Boolean   @default(false)
+  frozenReason  String?
+  isBanned      Boolean   @default(false)
+  banReason     String?
+  disputes      Dispute[]
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -223,6 +230,8 @@ model Order {
   orderDate    DateTime @default(now())
   shippedDate  DateTime?
   deliveredDate DateTime?
+  
+  dispute      Dispute?
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -431,4 +440,86 @@ model PromotedCampaign {
   updatedAt       DateTime  @updatedAt
 
   @@map("promoted_campaigns")
+}
+
+model AdminUser {
+  id           String            @id @default(cuid())
+  email        String            @unique
+  name         String?
+  passwordHash String
+  role         AdminRole         @default(SUB_ADMIN)
+  permissions  AdminPermissions?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@map("admin_users")
+}
+
+model AdminPermissions {
+  id              String    @id @default(cuid())
+  adminUserId     String    @unique
+  adminUser       AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  manageDeals     Boolean   @default(false)
+  manageUsers     Boolean   @default(false)
+  manageBanners   Boolean   @default(false)
+  resolveDisputes Boolean   @default(false)
+  manageAdmins    Boolean   @default(false)
+
+  @@map("admin_permissions")
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  SUB_ADMIN
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  icon        String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("categories")
+}
+
+model Banner {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  imageUrl    String
+  linkUrl     String?
+  isActive    Boolean  @default(true)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("banners")
+}
+
+model Dispute {
+  id          String        @id @default(cuid())
+  orderId     String        @unique
+  order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reason      String
+  details     String
+  status      DisputeStatus @default(PENDING)
+  resolution  String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("disputes")
+}
+
+enum DisputeStatus {
+  PENDING
+  INVESTIGATING
+  RESOLVED
+  REJECTED
 }

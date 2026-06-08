@@ -27,7 +27,7 @@ export default function DealModeration() {
     try {
       const response = await fetch(`/api/admin/deals?filter=${filter}`)
       const data = await response.json()
-      setDeals(data.deals)
+      setDeals(data.deals ?? [])
     } catch (error) {
       console.error('Error fetching deals:', error)
     } finally {

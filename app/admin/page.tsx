@@ -1,127 +1,155 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useSession } from 'next-auth/react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { BarChart3, Users, ShoppingBag, TrendingUp, AlertCircle, CheckCircle, Clock, ArrowLeft, Megaphone } from 'lucide-react'
-import AdminStats from '@/app/components/admin/AdminStats'
-import DealModeration from '@/app/components/admin/DealModeration'
-import UserManagement from '@/app/components/admin/UserManagement'
-import Analytics from '@/app/components/admin/Analytics'
-import CampaignManager from '@/app/components/admin/CampaignManager'
+import { Lock, Mail, AlertCircle, Eye, EyeOff, Shield } from 'lucide-react'
 
-type TabType = 'overview' | 'deals' | 'users' | 'analytics' | 'campaigns'
-
-export default function AdminDashboard() {
-  const { data: session, status } = useSession()
+export default function AdminLoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [checking, setChecking] = useState(true)
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<TabType>('overview')
-  const [stats, setStats] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/signin')
-    }
-  }, [status, router])
+    fetch('/api/admin/auth/verify')
+      .then(res => {
+        if (res.ok) router.replace('/admin/dashboard')
+        else setChecking(false)
+      })
+      .catch(() => setChecking(false))
+  }, [router])
 
-  useEffect(() => {
-    if (session?.user?.id) {
-      fetchStats()
-    }
-  }, [session])
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
 
-  const fetchStats = async () => {
     try {
-      const response = await fetch('/api/admin/stats')
-      const data = await response.json()
-      setStats(data)
-    } catch (error) {
-      console.error('Error fetching stats:', error)
+      const res = await fetch('/api/admin/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || 'Invalid credentials. Please try again.')
+      } else {
+        router.push('/admin/dashboard')
+      }
+    } catch {
+      setError('An unexpected error occurred. Please try again.')
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
-  if (status === 'loading' || isLoading) {
+  if (checking) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#E2FBEE] via-[#DEDEDE] to-[#F4C2B8] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F3AF7B]"></div>
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
       </div>
     )
   }
 
-  if (!session) {
-    return null
-  }
-
-  const tabs = [
-    { id: 'overview' as TabType, label: 'Overview', icon: BarChart3 },
-    { id: 'deals' as TabType, label: 'Deal Moderation', icon: ShoppingBag },
-    { id: 'users' as TabType, label: 'Users', icon: Users },
-    { id: 'analytics' as TabType, label: 'Analytics', icon: TrendingUp },
-    { id: 'campaigns' as TabType, label: 'Promotions', icon: Megaphone }
-  ]
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#E2FBEE] via-[#DEDEDE] to-[#F4C2B8] pt-24 pb-12">
-      <div className="container mx-auto px-6">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <button 
-            onClick={() => router.push('/')}
-            className="cursor-pointer inline-flex items-center gap-2 text-gray-600 hover:text-[#F3AF7B] transition-colors mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Back to Homepage</span>
-          </button>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-          <p className="text-gray-600">Manage deals, users, and view platform analytics</p>
-        </motion.div>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-zinc-950 font-sans text-zinc-100">
+      {/* Background effects */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.06)_0,rgba(0,0,0,0)_60%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,#18181b_1px,transparent_1px),linear-gradient(to_bottom,#18181b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-20" />
 
-        {/* Tabs */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex gap-4 mb-8 overflow-x-auto pb-2"
-        >
-          {tabs.map(tab => {
-            const Icon = tab.icon
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`cursor-pointer flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'bg-gradient-to-r from-[#F3AF7B] to-[#F4C2B8] text-white shadow-lg'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                {tab.label}
-              </button>
-            )
-          })}
-        </motion.div>
+      <div className="relative z-10 w-full max-w-md px-4">
+        {/* Logo / Brand */}
+        <div className="mb-8 flex flex-col items-center">
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10 shadow-[0_0_30px_rgba(16,185,129,0.12)]">
+            <Shield className="h-7 w-7 text-emerald-400" />
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-white">Deelbreaker</h1>
+          <p className="mt-1.5 text-sm text-zinc-500">Admin Control Center</p>
+        </div>
 
-        {/* Content */}
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {activeTab === 'overview' && stats && <AdminStats stats={stats} />}
-          {activeTab === 'deals' && <DealModeration />}
-          {activeTab === 'users' && <UserManagement />}
-          {activeTab === 'analytics' && <Analytics />}
-          {activeTab === 'campaigns' && <CampaignManager />}
-        </motion.div>
+        {/* Card */}
+        <div className="rounded-3xl border border-zinc-800 bg-zinc-900/70 p-8 shadow-2xl backdrop-blur-xl ring-1 ring-white/5">
+          <h2 className="mb-6 text-lg font-semibold text-zinc-200">Sign in to your account</h2>
+
+          {error && (
+            <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email */}
+            <div>
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                Email Address
+              </label>
+              <div className="relative">
+                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-zinc-500">
+                  <Mail className="h-4 w-4" />
+                </span>
+                <input
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="admin@deelbreaker.com"
+                  className="block w-full rounded-xl border border-zinc-800 bg-zinc-950 py-3 pl-10 pr-4 text-sm text-zinc-100 placeholder-zinc-600 transition-all duration-200 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                Password
+              </label>
+              <div className="relative">
+                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-zinc-500">
+                  <Lock className="h-4 w-4" />
+                </span>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="block w-full rounded-xl border border-zinc-800 bg-zinc-950 py-3 pl-10 pr-10 text-sm text-zinc-100 placeholder-zinc-600 transition-all duration-200 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-zinc-500 hover:text-zinc-300"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex w-full cursor-pointer items-center justify-center rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? (
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                'Sign In'
+              )}
+            </button>
+          </form>
+        </div>
+
+        <p className="mt-6 text-center text-xs text-zinc-600">
+          Admin access only &mdash; unauthorised access is prohibited
+        </p>
       </div>
     </div>
   )
