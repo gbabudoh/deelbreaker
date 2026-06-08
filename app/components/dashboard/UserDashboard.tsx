@@ -115,17 +115,19 @@ function DashboardContent() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-[#F3AF7B] to-[#F4C2B8] rounded-2xl lg:rounded-3xl p-4 lg:p-6 mb-4 lg:mb-8 text-white shadow-lg"
+          className="bg-gradient-to-br from-[#df874e] to-[#cc6855] rounded-2xl lg:rounded-3xl p-4 lg:p-6 mb-4 lg:mb-8 text-white shadow-lg border border-[#e89c6d]/30"
         >
           <div className="flex items-center gap-3 lg:gap-4 mb-4">
-            <div className="w-14 h-14 lg:w-16 lg:h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white text-lg lg:text-xl font-bold border-2 border-white/30 font-sans">
+            <div className="w-14 h-14 lg:w-16 lg:h-16 bg-white/25 backdrop-blur-sm rounded-full flex items-center justify-center text-white text-lg lg:text-xl font-bold border-2 border-white/40 shadow-inner font-sans">
               {displayProfile.name.split(' ').map((n: string) => n[0]).join('')}
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg lg:text-2xl font-bold truncate">Hi, {displayProfile.name.split(' ')[0]}!</h1>
+              <h1 className="text-lg lg:text-3xl font-extrabold bg-gradient-to-r from-white via-orange-100 to-[#ffe8d6] bg-clip-text text-transparent drop-shadow-sm select-none">
+                Hi, {displayProfile.name.split(' ')[0]}!
+              </h1>
               <div className="flex flex-wrap gap-2 mt-1">
-                <span className="text-white/80 text-xs lg:text-sm bg-white/10 px-2 py-0.5 rounded-full border border-white/20">{displayProfile.level}</span>
-                <span className="text-white/80 text-xs lg:text-sm bg-white/10 px-2 py-0.5 rounded-full border border-white/20">{displayProfile.memberSince}</span>
+                <span className="text-white text-xs lg:text-sm bg-white/20 px-2.5 py-0.5 rounded-full border border-white/30 font-semibold shadow-xs">Consumer Account</span>
+                <span className="text-white text-xs lg:text-sm bg-white/20 px-2.5 py-0.5 rounded-full border border-white/30 font-semibold shadow-xs">{displayProfile.memberSince}</span>
               </div>
             </div>
             <div className="hidden lg:flex items-center gap-3">
@@ -139,9 +141,9 @@ function DashboardContent() {
           </div>
 
           {/* Account Summary */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 lg:p-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-white/95">Account Summary</h2>
-            <p className="text-xs lg:text-sm text-white/85 mt-1 leading-relaxed">
+          <div className="bg-black/10 backdrop-blur-xs rounded-xl p-3.5 lg:p-4.5 border border-white/5 shadow-xs">
+            <h2 className="text-xs lg:text-sm font-bold uppercase tracking-wider text-[#ffe8d6] drop-shadow-xs">Account Summary</h2>
+            <p className="text-xs lg:text-sm text-white/95 mt-1.5 leading-relaxed font-medium">
               Welcome to your personal Deelbreaker panel. Track your purchased products, claim service vouchers, review details of active instant deals, and check your account details.
             </p>
           </div>
