@@ -50,24 +50,8 @@ export async function GET(request: NextRequest) {
       .filter(c => c.status === 'APPROVED' || c.status === 'PAID')
       .reduce((sum, c) => sum + c.amount, 0)
 
-    // Calculate level progress
-    // Bronze: 0-5 orders, Silver: 6-15 orders, Gold: 16-30 orders, Platinum: 30+ orders
-    let level = dbUser.level || 'Bronze'
-    let progress = 0
-    
-    if (dealsJoined <= 5) {
-      level = 'Bronze Member'
-      progress = Math.min(Math.round((dealsJoined / 5) * 100), 100)
-    } else if (dealsJoined <= 15) {
-      level = 'Silver Member'
-      progress = Math.min(Math.round(((dealsJoined - 5) / 10) * 100), 100)
-    } else if (dealsJoined <= 30) {
-      level = 'Gold Member'
-      progress = Math.min(Math.round(((dealsJoined - 15) / 15) * 100), 100)
-    } else {
-      level = 'Platinum Member'
-      progress = 100
-    }
+    const level = 'Consumer Account'
+    const progress = 0
 
     // Format memberSince
     const memberSince = new Date(dbUser.joinedAt).toLocaleString('default', { month: 'long', year: 'numeric' })

@@ -71,7 +71,7 @@ function DashboardContent() {
     cashbackBalance: 0,
     dealsJoined: 0,
     groupBuysCompleted: 0,
-    level: 'Bronze Member',
+    level: 'Consumer Account',
     nextLevelProgress: 0
   };
 
@@ -140,24 +140,11 @@ function DashboardContent() {
             </div>
           </div>
 
-          {/* Level Progress */}
+          {/* Account Summary */}
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 lg:p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-white/90">Progress Status</span>
-              <span className="text-sm font-bold">{displayProfile.nextLevelProgress}%</span>
-            </div>
-            <div className="w-full bg-white/20 rounded-full h-2 lg:h-2.5">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${displayProfile.nextLevelProgress}%` }}
-                transition={{ duration: 1, ease: "easeOut" }}
-                className="bg-white h-full rounded-full"
-              />
-            </div>
-            <p className="text-xs lg:text-sm text-white/70 mt-2">
-              {displayProfile.level === 'Platinum Member' 
-                ? 'Maximum Platinum benefits unlocked!' 
-                : 'Join more flash deals to unlock the next membership tier benefits!'}
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-white/95">Account Summary</h2>
+            <p className="text-xs lg:text-sm text-white/85 mt-1 leading-relaxed">
+              Welcome to your personal Deelbreaker panel. Track your purchased products, claim service vouchers, review details of active instant deals, and check your cashback wallet.
             </p>
           </div>
         </motion.div>
