@@ -22,6 +22,7 @@ const links = {
     { label: 'Terms of Service', href: '/terms' },
     { label: 'Privacy Policy', href: '/privacy' },
     { label: 'Cookie Settings', href: '/cookies' },
+    { label: 'Resolution Centre', href: '/resolution-centre' },
   ],
 };
 
