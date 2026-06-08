@@ -88,11 +88,17 @@ function DashboardContent() {
           </button>
           <h1 className="text-lg font-semibold text-gray-900">Dashboard</h1>
           <div className="flex items-center gap-1">
-            <button className="cursor-pointer p-2 text-gray-600 hover:text-[#F3AF7B] transition-colors relative touch-active rounded-full">
+            <button 
+              onClick={() => handleTabChange('profile')}
+              className="cursor-pointer p-2 text-gray-600 hover:text-[#F3AF7B] transition-colors relative touch-active rounded-full"
+            >
               <Bell className="w-5 h-5" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
-            <button className="cursor-pointer p-2 text-gray-600 hover:text-[#F3AF7B] transition-colors touch-active rounded-full">
+            <button 
+              onClick={() => handleTabChange('profile')}
+              className="cursor-pointer p-2 text-gray-600 hover:text-[#F3AF7B] transition-colors touch-active rounded-full"
+            >
               <Settings className="w-5 h-5" />
             </button>
           </div>
@@ -131,10 +137,16 @@ function DashboardContent() {
               </div>
             </div>
             <div className="hidden lg:flex items-center gap-3">
-              <button className="cursor-pointer p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors touch-active">
+              <button 
+                onClick={() => handleTabChange('profile')}
+                className="cursor-pointer p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors touch-active"
+              >
                 <Bell className="w-5 h-5" />
               </button>
-              <button className="cursor-pointer p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors touch-active">
+              <button 
+                onClick={() => handleTabChange('profile')}
+                className="cursor-pointer p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors touch-active"
+              >
                 <Settings className="w-5 h-5" />
               </button>
             </div>
