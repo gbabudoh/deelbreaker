@@ -38,6 +38,10 @@ model User {
   totalSavings  Float    @default(0)
   joinedAt      DateTime @default(now())
   
+  // Onboarding
+  onboardingComplete Boolean @default(false)
+  role               String?  // 'BUYER' or 'SELLER'
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -106,6 +110,7 @@ model Merchant {
   // Stripe Connect onboarding settings
   stripeConnectId String? @unique
   isBillingActive Boolean @default(false)
+  onboardingComplete Boolean @default(false)
   
   // Stats
   totalRevenue   Float   @default(0)

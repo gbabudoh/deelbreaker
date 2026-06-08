@@ -11,7 +11,6 @@ import SavedDeals from './SavedDeals';
 import CashbackHistory from './CashbackHistory';
 import ActiveGroupBuys from './ActiveGroupBuys';
 import ProfileSettings from './ProfileSettings';
-import UserOnboarding from './UserOnboarding';
 
 function DashboardContent() {
   const router = useRouter();
@@ -19,7 +18,6 @@ function DashboardContent() {
   const { data: session } = useSession();
   const tabParam = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState(tabParam || 'overview');
-  const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
@@ -77,9 +75,7 @@ function DashboardContent() {
     nextLevelProgress: 0
   };
 
-  if (!isOnboardingComplete) {
-    return <UserOnboarding onComplete={() => setIsOnboardingComplete(true)} />;
-  }
+
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24 lg:pb-8">

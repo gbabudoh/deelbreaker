@@ -60,7 +60,8 @@ export async function POST(request: NextRequest) {
         website,
         taxId,
         address,
-        phone
+        phone,
+        onboardingComplete: true
       },
       create: {
         name,
@@ -71,7 +72,8 @@ export async function POST(request: NextRequest) {
         taxId,
         address,
         phone,
-        commissionRate: 10.0 // Default 10% marketplace commission
+        commissionRate: 10.0, // Default 10% marketplace commission
+        onboardingComplete: true
       }
     })
 

@@ -84,11 +84,44 @@ export async function GET(request: NextRequest) {
         dealsJoined,
         groupBuysCompleted,
         level,
-        nextLevelProgress: progress
+        nextLevelProgress: progress,
+        onboardingComplete: dbUser.onboardingComplete,
+        role: dbUser.role
       }
     })
   } catch (error) {
     console.error('Error fetching user profile stats:', error)
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { onboardingComplete, role } = body
+
+    const updatedUser = await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        ...(onboardingComplete !== undefined && { onboardingComplete }),
+        ...(role !== undefined && { role })
+      }
+    })
+
+    return NextResponse.json({
+      success: true,
+      profile: {
+        onboardingComplete: updatedUser.onboardingComplete,
+        role: updatedUser.role
+      }
+    })
+  } catch (error) {
+    console.error('Error updating user profile:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
